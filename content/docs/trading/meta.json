@@ -1,4 +1,10 @@
 {
   "defaultOpen": true,
-  "title": "Trading"
+  "title": "Trading",
+  "pages": [
+    "market-specs",
+    "perpetuals-trading",
+    "funding-rates",
+    "trading-fees"
+  ]
 }
