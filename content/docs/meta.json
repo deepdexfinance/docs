@@ -1,6 +1,7 @@
 {
   "pages": [
-    "onboarding",
+    "getting-started",
+    "trading",
     "developer"
   ],
   "title": "SafeLiquid Docs"
