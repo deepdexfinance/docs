@@ -3,7 +3,9 @@
     "index",
     "getting-started",
     "trading",
+    "liquidations",
+    "lend-and-borrow",
     "developer"
   ],
-  "title": "SafeLiquid Docs"
+  "title": "SafeLiquid Documentations"
 }
