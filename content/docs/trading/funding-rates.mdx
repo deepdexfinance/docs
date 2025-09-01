@@ -2,4 +2,10 @@
 title: Funding Rates
 ---
 
-Perpetuals futures have no expiry date, final settlement, or delivery. As such, funding rate payments are used as the incentive mechanism to bring the perpetual futures' mark price in line with the oracle price.
+A periodic payment exchanged between long and short position holders. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price.
+
+**Calculation:**
+The funding rate is calculated using the difference between the market price and the **Index/Oracle Price**.
+
+* If the **Funding Rate** is positive, long positions pay short positions. This happens when the perpetual contract's price is higher than the underlying asset's spot price.
+* If the **Funding Rate** is negative, short positions pay long positions. This occurs when the perpetual contract's price is lower than the underlying asset's spot price.
