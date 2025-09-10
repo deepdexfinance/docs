@@ -12,8 +12,8 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: (
         <>
-          <img src="https://app.safeliquid.ai/images/safeliquid.png" className="size-8" />
-          SafeLiquid
+          <img alt="DeepDEX" src="/logo.png" className="w-8" />
+          DeepDEX 
         </>
       ),
     },
