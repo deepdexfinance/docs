@@ -1,6 +1,7 @@
 import '@/app/global.css';
 import { RootProvider } from 'fumadocs-ui/provider';
 import { Inter } from 'next/font/google';
+import 'katex/dist/katex.css';
 
 const inter = Inter({
   subsets: ['latin'],
