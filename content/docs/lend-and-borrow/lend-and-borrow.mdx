@@ -1,7 +1,16 @@
 ---
-title: What is Lend and Borrow?
+title: Lending and Borrowing
 ---
 
-...
+## What is Lending and Borrowing?
 
+DeepDEX offers lending and borrowing features as part of its decentralized exchange (DEX) platform. These features are a key component of DeepDEX's functionality, powering its multi-asset cross-collateral capabilities for perpetuals trading and allowing users to earn yield or borrow assets for their own use.
+
+## How Lending Works
+
+When users deposit assets into the protocol, they automatically become part of the lending pools and begin to earn yield. This yield is generated from the interest paid by borrowers. The  interest rates (Supply APR) are dynamic and fluctuate based on the supply and demand of each specific asset, dertemined by the utilisation ratio which is calculated as `Total Borrowed / Total Deposits`. Yield is paid out periodically and compounds automatically.
+
+## How Borrowing Works
+
+To borrow assets, users must first deposit other assets to serve as collateral. The amount users are allowed to borrow is determined by the collateral weight (asset weight) of the deposited asset and the liability weight of the borrowed asset, where asset weight is lower or equal than 100% and liability weight is higher or equal to 100%. More stable assets, like USDC, have higher asset weights, allowing users to borrow a greater percentage of their value. In contrast, more volatile assets generally have a lower collateral weights. Likewise, more stable assets have lower liability weights, allowing users to borrow them with a greater percentage against the collateralized assets. In contrast, more volitile assets generally have higher liability weights. more Liquidations could happen when the value of the collateral falls below a certain threshold.
 
