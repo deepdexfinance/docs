@@ -1,4 +1,9 @@
 {
   "defaultOpen": false,
-  "title": "Getting Started"
+  "title": "Getting Started",
+  "pages": [
+    "deposit-withdraw-borrow-repay",
+    "how-to-start-trading",
+    "subaccounts"
+  ]
 }
