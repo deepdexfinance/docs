@@ -12,5 +12,50 @@ When users deposit assets into the protocol, they automatically become part of t
 
 ## How Borrowing Works
 
-To borrow assets, users must first deposit other assets to serve as collateral. The amount users are allowed to borrow is determined by the collateral weight (asset weight) of the deposited asset and the liability weight of the borrowed asset, where asset weight is lower or equal than 100% and liability weight is higher or equal to 100%. More stable assets, like USDC, have higher asset weights, allowing users to borrow a greater percentage of their value. In contrast, more volatile assets generally have a lower collateral weights. Likewise, more stable assets have lower liability weights, allowing users to borrow them with a greater percentage against the collateralized assets. In contrast, more volitile assets generally have higher liability weights. more Liquidations could happen when the value of the collateral falls below a certain threshold.
+To borrow assets, users must first deposit other assets to serve as collateral. The amount users are allowed to borrow is determined by the Initial Asset Weight (IAW) of the deposited asset and the Initial Liability Weight (ILW) of the borrowed asset, where IAW is lower or equal than 100% and ILW is higher or equal to 100%. 
+
+After borrowing, users need to maintain their loans. The maximum amount of loan users can maintain is determined by the Maintenance Asset Weight (MAW) of of the deposited asset and the Maintenance Liability Weight (MLW) of the borrowed asset, where MAW is lower or equal than 100% and MLW is higher or equal to 100%.
+
+More stable assets, like USDC, have higher IAWs and MAWs, allowing users to borrow a greater percentage of their value. In contrast, more volatile assets generally have a lower IAWs and MAWs. Likewise, more stable assets have lower ILWs and MLWs, allowing users to borrow them with a greater percentage against the collateralized assets. In contrast, more volitile assets generally have higher ILWs and MLWs. Liquidations could happen when the value of the collateral falls below a certain threshold.
+
+## Margin Parameters
+
+<div style={{ }}>
+  <table style={{ }}>
+    <thead>
+      <tr>
+        <th style={{ }}>Asset</th>
+        <th>IAW</th>
+        <th>MAW</th>
+        <th>ILW</th>
+        <th>MLW</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style={{ }}>USDT</td>
+        <td>100%</td>
+        <td>100%</td>
+        <td>100%</td>
+        <td>100%</td>
+      </tr>
+
+      <tr>
+        <td style={{ }}>ETH</td>
+        <td>90%</td>
+        <td>95%</td>
+        <td>105%</td>
+        <td>110%</td>
+      </tr>
+
+      <tr>
+        <td style={{ }}>SOL</td>
+        <td>85%</td>
+        <td>90%</td>
+        <td>110%</td>
+        <td>115%</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
