@@ -4,17 +4,51 @@ title: Glossary
 
 ## Core Concepts
 
-#### Perpetual Contract
-A type of futures contract that has no expiration date. Traders can hold a position indefinitely as long as they maintain the required margin.
+#### Index/Oracle Price
+The current market price of an asset, which is sourced from external data providers (Currently Pyth) and is used to determine liquidations.
 
 #### Long/Short Position
 A **long** position is a bet that the asset's price will go up, while a **short** position is a bet that it will go down.
 
+#### Leverage
+The ability to trade a position larger than your initial capital. For example, 10x leverage means a $100 deposit can control a $1,000 position.
+
+#### Liquidation
+The forced closing of a leveraged position by the protocol when the trader's margin falls below the maintenance margin level. This happens to prevent a trader's losses from exceeding their collateral.
+
+#### Maker
+A Maker is a trader who places a limit order that is not immediately filled.
+
 #### Margin
 The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
 
-#### Leverage
-The ability to trade a position larger than your initial capital. For example, 10x leverage means a $100 deposit can control a $1,000 position.
+#### Mid Price
+The average of the best available bid and ask prices on an order book.
+
+#### Perpetual Contract
+A type of futures contract that has no expiration date. Traders can hold a position indefinitely as long as they maintain the required margin.
+
+#### Taker
+
+A Taker is a trader who places an order that gets filled immediately against an existing order on the order book.
+
+
+## Lending and Borrowing
+
+#### Reserve Factor
+
+A parameter that determines what percentage of the interest paid by borrowers is allocated to the protocol. This portion of the interest helps fund the protocol's security and growth.
+
+#### Utilization or Utilization Rate
+
+Utilization measures the proportion of an asset currently being borrowed compared to the total supplied amount.
+
+```math
+\text{Utilization Rate} = \frac{\text{Total Borrowed}}{\text{Total Supplied}}
+```
+
+
+## Perpetual Trading
 
 #### Funding Rate
 An hourly payment exchanged between long and short position holders. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price. 
@@ -25,25 +59,4 @@ The minimum amount of margin required to open a new position.
 #### Maintenance Margin
 The minimum amount of margin required to keep a position open. If your margin falls below this level, your position is at risk of liquidation.
 
-#### Liquidation
-The forced closing of a leveraged position by the protocol when the trader's margin falls below the maintenance margin level. This happens to prevent a trader's losses from exceeding their collateral.
 
-#### Mid Price
-The average of the best available bid and ask prices on an order book.
-
-#### Index/Oracle Price
-The current market price of an asset, which is sourced from external data providers (Currently Pyth) and is used to determine liquidations.
-
-## Lending and Borrowing
-
-#### Utilization or Utilization Rate
-
-Utilization measures the proportion of an asset currently being borrowed compared to the total supplied amount.
-
-```math
-\text{Utilization Rate} = \frac{\text{Total Borrowed}}{\text{Total Supplied}}
-```
-
-#### Reserve Factor
-
-A parameter that determines what percentage of the interest paid by borrowers is allocated to the protocol. This portion of the interest helps fund the protocol's security and growth.
