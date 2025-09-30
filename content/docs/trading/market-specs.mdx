@@ -73,7 +73,9 @@ In addition to the spot market, perpetual market maintains a P&L Pool to absorb 
 
 DeepDex Perpetual uses a Funding Rate mechanism to balance long and short positions. When demand skews heavily in one direction, funding payments incentivize traders to take the opposite side. This rate updates periodically and reflects recent market activity.
 
-The Maintenance Margin Ratio (MMR) is the minimum percentage of value that must maintained in the margin account relative to the total value of the total value of the perpetual positions.
+There are two parameters that control a market's leverage level:
+- [Initial Margin Ratio (IMR)](/glossary/#initial-margin-ratio-imr): The percentage of a new perpetual position's value required as collateral to open the position.
+- [Maintenance Margin Ratio (MMR)](/glossary/#maintenance-margin-ratio-mmr): The minimum percentage of the perpetual position value that must be maintained as collateral to keep the position open.
 
 Initial Margin Fraction (IMF) factor is a dynamic risk control mechanism used to scale margin requirements based on the size of a trader's position. It increases margin requirements for larger positions and protects the protocol from systemic risk.
 
@@ -88,8 +90,9 @@ Initial Margin Fraction (IMF) factor is a dynamic risk control mechanism used to
         <th>Min Order Size</th>
         <th>Tick Size</th>
         <th>Step Size</th>
-        <th>IMF Factor</th>
+        <th>IMR</th>
         <th>MMR</th>
+        <th>IMF Factor</th>
         <th>Liquidation Fee</th>
         <th>Market Index</th>
       </tr>
@@ -101,8 +104,9 @@ Initial Margin Fraction (IMF) factor is a dynamic risk control mechanism used to
         <td>0.0001 BTC</td>
         <td>0.1</td>
         <td>0.0001 BTC</td>
-        <td>0.0002</td>
+        <td>5%</td>
         <td>2%</td>
+        <td>0.0002</td>
         <td>2%</td>
         <td>1</td>
       </tr>
@@ -113,8 +117,9 @@ Initial Margin Fraction (IMF) factor is a dynamic risk control mechanism used to
         <td>0.001 ETH</td>
         <td>0.01</td>
         <td>0.001 ETH</td>
-        <td>0.0002</td>
+        <td>5%</td>
         <td>2%</td>
+        <td>0.0002</td>
         <td>2%</td>
         <td>2</td>
       </tr>
@@ -125,8 +130,9 @@ Initial Margin Fraction (IMF) factor is a dynamic risk control mechanism used to
         <td>0.01 SOL</td>
         <td>0.01</td>
         <td>0.01 SOL</td>
-        <td>0.0002</td>
+        <td>5%</td>
         <td>2%</td>
+        <td>0.0002</td>
         <td>2%</td>
         <td>3</td>
       </tr>
