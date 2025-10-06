@@ -2,6 +2,7 @@
   "pages": [
     "index",
     "getting-started",
+    "security",
     "trading",
     "lend-and-borrow",
     "liquidations",
