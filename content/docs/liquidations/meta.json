@@ -1,4 +1,7 @@
 {
   "defaultOpen": false,
-  "title": "Liquidations"
+  "title": "Liquidations",
+  "pages": [
+    "liquidations"
+  ]
 }
