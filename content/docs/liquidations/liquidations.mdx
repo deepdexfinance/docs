@@ -4,14 +4,21 @@ title: Liquidations
 
 ## What are liquidations?
 
-Liquidations could happen to users' accounts when their Total Maintenance Collaterals are equal or less than their Weighted Liabilities.
-
-**Total Maintenance Collateral**
-
-**Weighted Liabilities**
-
-
+Liquidations could happen to users' accounts when their [Total Collateral Value](/glossary#total-collateral-value) are equal or less than their [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement).
 
 ## Liquidation mechanism
 
+DeepDEX utilizes a decentralized, gradual liquidation process.
 
+Once a user's Total Collateral Value falls below the Maintenance Margin Requirement, liquidations would be triggered. 
+
+Steps:
+
+1. All open orders are canceled. 
+2. Liquidators can then iteratively liquidate portions of the account's assets and liabilities over a throttled time window. This continues until the account's collateral exceeds the Maintenance Margin Requirement plus an amount determined by the Liquidation Buffer Ratio.
+
+Any participant can run a liquidation bot. Liquidations are executed as position transfers between the user's account and the liquidator's account, which requires the liquidator to have sufficient collateral deposited.
+
+
+## Running a Liquidator Bot
+More details will be provided.
