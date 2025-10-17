@@ -7,11 +7,17 @@ title: Glossary
 #### Index/Oracle Price
 The current market price of an asset, which is sourced from external data providers (Currently Pyth) and is used to determine liquidations.
 
+#### Initial Asset Weight (IAW)
+The risk-adjusted value multiplier applied to each asset when determining how much of it can be counted as initial collateral for opening new positions or borrowing. The range of IAW is $$0 \le \text{IAW} \le 1$$.
+
+#### Initial Borrow Weight (IBW)
+The risk multiplier applied to each borrowed asset when determining the initial liability value for opening new positions or borrowing. The range of IBW is $$\text{IBW} \ge 1$$.
+
 #### Long/Short Position
 A **long** position is a bet that the asset's price will go up, while a **short** position is a bet that it will go down.
 
 #### Leverage
-The ability to trade a position larger than your initial capital. For example, 10x leverage means a $100 deposit can control a $1,000 position.
+The ability to trade a position larger than your initial capital.
 
 #### Liquidation
 The forced closing of a leveraged position by the protocol when the trader's margin falls below the maintenance margin level. This happens to prevent a trader's losses from exceeding their collateral.
@@ -22,6 +28,29 @@ A Maker is a trader who places a limit order that is not immediately filled.
 #### Margin
 The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
 
+#### Maintenance Asset Value (MAV)
+The maintenance-level, risk-weighted value of an asset held in a user's account. It measures how much of the asset's market value can be counted toward the user's maintenance margin after applying the risk-adjusted [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $$i$$,
+
+```math
+\text{MAV}_i = \text{AssetValue}_i \times \text{MAW}_i
+```
+
+#### Maintenance Asset Weight (MAW)
+The risk-adjusted value multiplier used to assess the maintenance-level collateral value required to keep positions open and avoid liquidation. The range of MAW is $$0 \le \text{MAW} \le 1$$.
+
+#### Maintenance Borrow Value (MBV)
+The maintenance-level, risk-weighted value of a borrowed asset. It quantifies that effective maintenance liability after applying the risk-adjusted [Maintenance Borrow Weight (MBW)](/glossary#maintenance-borrow-weight-mbw). For asset $$i$$,
+
+```math
+\text{MBV}_i = \text{AssetValue}_i \times \text{MBW}_i
+```
+
+#### Maintenance Borrow Weight (MBW)
+The risk multiplier applied to each liability when assessing maintenance-level solvency. The range of MBW is $$\text{MBW} \le 1$$.
+
+#### Maintenance Margin Requirement
+The risk-weighted value of a user's borrows and perpetual positions.
+
 #### Mid Price
 The average of the best available bid and ask prices on an order book.
 
@@ -29,18 +58,20 @@ The average of the best available bid and ask prices on an order book.
 A type of futures contract that has no expiration date. Traders can hold a position indefinitely as long as they maintain the required margin.
 
 #### Taker
-
 A Taker is a trader who places an order that gets filled immediately against an existing order on the order book.
 
+#### Total Collateral Value
+The sum of a user's aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all held assets and [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl).
+
+#### Total Liability Value
+The Total Liability Value, or Total Liabilities, of a user's account represents the aggregate risk-weighted value of all Liabilities. It includes all liabilities arising from borrowed assets, open positions, open orders, and unsettled funding payments.
 
 ## Lending and Borrowing
 
 #### Reserve Factor
-
 A parameter that determines what percentage of the interest paid by borrowers is allocated to the protocol. This portion of the interest helps fund the protocol's security and growth.
 
 #### Utilization or Utilization Rate
-
 Utilization measures the proportion of an asset currently being borrowed compared to the total supplied amount.
 
 ```math
@@ -51,7 +82,7 @@ Utilization measures the proportion of an asset currently being borrowed compare
 ## Perpetual Trading
 
 #### Funding Rate
-An hourly payment exchanged between long and short position holders. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price. 
+The Funding Rate is a periodic rate applied to perpetual positions to calculate the funding payment exchanged between long and short positions. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price. 
 
 #### Initial Margin
 The minimum amount of margin required to open a new perpetual position.
@@ -64,3 +95,6 @@ The minimum amount of margin required to keep a perpetual position open. If your
 
 #### Maintenance Margin Ratio (MMR)
 The minimum percentage of the perpetual position value that must be maintained as collateral to keep the position open. Falling below this ratio can trigger liquidation.
+
+#### Unrealized Profit and Loss (Unrealized PnL)
+The Unrealized PnL of a perpetual position represents the current, mark-to-market gain or loss of an open position based on the latest market price, before the position is closed or settled.

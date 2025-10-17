@@ -14,11 +14,11 @@ Every asset within the protocol is subject to a Supply Cap, which represents the
 
 ## How Borrowing Works
 
-To borrow assets, users must first deposit other assets to serve as collateral. The amount users are allowed to borrow is determined by the Initial Asset Weight (IAW) of the deposited asset and the Initial Liability Weight (ILW) of the borrowed asset, where IAW is lower or equal than 100% and ILW is higher or equal to 100%. 
+To borrow assets, users must first deposit other assets to serve as collateral. The amount users are allowed to borrow is determined by the **Initial Asset Weight (IAW)** of the deposited asset and the **Initial Borrow Weight (IBW)** of the borrowed asset, where IAW is lower or equal than 100% and IBW is higher than or equal to 100%. 
 
-After borrowing, users need to maintain their loans. The maximum amount of loan users can maintain is determined by the Maintenance Asset Weight (MAW) of of the deposited asset and the Maintenance Liability Weight (MLW) of the borrowed asset, where MAW is lower or equal than 100% and MLW is higher or equal to 100%.
+After borrowing, users need to maintain their loans. The maximum amount of loan users can maintain is determined by the **Maintenance Asset Weight (MAW)** of of the deposited asset and the **Maintenance Borrow Weight (MBW)** of the borrowed asset, where MAW is lower or equal than 100% and MBW is higher than or equal to 100%.
 
-More stable assets, like USDC, have higher IAWs and MAWs, allowing users to borrow a greater percentage of their value. In contrast, more volatile assets generally have a lower IAWs and MAWs. Likewise, more stable assets have lower ILWs and MLWs, allowing users to borrow them with a greater percentage against the collateralized assets. In contrast, more volitile assets generally have higher ILWs and MLWs. Liquidations could happen when the value of the collateral falls below a certain threshold.
+Assets with lower volatility (e.g., USDC) have higher IAWs and MAWs, enabling higher borrowing power. Volatile assets, by contrast, have lower IAWs and MAWs. Likewise, assets with lower volatility have lower ILWs and MLWs, allowing users to borrow them at a higher percentage against collateralized assets. Conversely, volitile assets generally have higher ILWs and MLWs. 
 
 ## Margin Parameters
 
@@ -29,8 +29,8 @@ More stable assets, like USDC, have higher IAWs and MAWs, allowing users to borr
         <th style={{ }}>Asset</th>
         <th>IAW</th>
         <th>MAW</th>
-        <th>ILW</th>
-        <th>MLW</th>
+        <th>IBW</th>
+        <th>MBW</th>
         <th>Supply Cap</th>
       </tr>
     </thead>
@@ -48,8 +48,8 @@ More stable assets, like USDC, have higher IAWs and MAWs, allowing users to borr
         <td style={{ }}>ETH</td>
         <td>90%</td>
         <td>95%</td>
-        <td>105%</td>
         <td>110%</td>
+        <td>105%</td>
         <td>11,000</td>
       </tr>
 
@@ -57,8 +57,8 @@ More stable assets, like USDC, have higher IAWs and MAWs, allowing users to borr
         <td style={{ }}>SOL</td>
         <td>85%</td>
         <td>90%</td>
-        <td>110%</td>
         <td>115%</td>
+        <td>110%</td>
         <td>850,000</td>
       </tr>
     </tbody>
