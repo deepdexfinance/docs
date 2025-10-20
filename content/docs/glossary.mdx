@@ -14,8 +14,22 @@ Risk is a metric that measures how close a user's portfolio is to liquidation. L
 #### Index/Oracle Price
 The current price of an asset. It is sourced from external data providers (Currently Pyth) and is used to determine liquidations.
 
+#### Initial Asset Value (IAV)
+The initial-level, risk-weighted value of an asset held in an account. It measures how much of the asset's market value can be counted as initial collateral for opening new positions or borrowing after applying the [Initial Asset Weight (IAW)](/glossary#initial-asset-weight-iaw). For asset $$i$$,
+
+```math
+\text{IAV}_i = \text{AssetValue}_i \times \text{IAW}_i
+```
+
 #### Initial Asset Weight (IAW)
 The risk-adjusted value multiplier applied to each asset when determining how much of it can be counted as initial collateral for opening new positions or borrowing. The range of IAW is $$0 \le \text{IAW} \le 1$$.
+
+#### Initial Borrow Value (IBV)
+The initial-level, risk-weighted value of a borrowed asset. It quantifies the initial liability after applying the [Maintenance Borrow Weight (MBW)](/glossary#maintenance-borrow-weight-mbw). For asset $$i$$,
+
+```math
+\text{IBV}_i = \text{AssetValue}_i \times \text{IBW}_i
+```
 
 #### Initial Borrow Weight (IBW)
 The risk multiplier applied to each borrowed asset when determining the initial liability value for opening new positions or borrowing. The range of IBW is $$\text{IBW} \ge 1$$.
@@ -36,7 +50,7 @@ A Maker is a trader who places a limit order that is not immediately filled.
 The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
 
 #### Maintenance Asset Value (MAV)
-The maintenance-level, risk-weighted value of an asset held in a user's account. It measures how much of the asset's market value can be counted toward the user's maintenance margin after applying the risk-adjusted [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $$i$$,
+The maintenance-level, risk-weighted value of an asset held in an account. It measures how much of the asset's market value can be counted toward the account's maintenance margin after applying the [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $$i$$,
 
 ```math
 \text{MAV}_i = \text{AssetValue}_i \times \text{MAW}_i
@@ -46,7 +60,7 @@ The maintenance-level, risk-weighted value of an asset held in a user's account.
 The risk-adjusted value multiplier used to assess the maintenance-level collateral value required to keep positions open and avoid liquidation. The range of MAW is $$0 \le \text{MAW} \le 1$$.
 
 #### Maintenance Borrow Value (MBV)
-The maintenance-level, risk-weighted value of a borrowed asset. It quantifies that effective maintenance liability after applying the risk-adjusted [Maintenance Borrow Weight (MBW)](/glossary#maintenance-borrow-weight-mbw). For asset $$i$$,
+The maintenance-level, risk-weighted value of a borrowed asset. It quantifies the effective maintenance liability after applying the risk-adjusted [Maintenance Borrow Weight (MBW)](/glossary#maintenance-borrow-weight-mbw). For asset $$i$$,
 
 ```math
 \text{MBV}_i = \text{AssetValue}_i \times \text{MBW}_i
@@ -68,7 +82,10 @@ A type of futures contract that has no expiration date. Traders can hold a posit
 A Taker is a trader who places an order that gets filled immediately against an existing order on the order book.
 
 #### Total Collateral Value
-Total Collateral Value, or Total Collateral, is the sum of a user's aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all held assets, [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl), and unsettled funding payments.
+Total Collateral Value, or Total Collateral, is the sum of the aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all assets in an account, [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl), and unsettled funding payments.
+
+#### Total Initial Collateral Value
+Total Initial Collateral Value, or Total Initial Collateral, is the aggregate [Initial Asset Value (MAV)](/glossary#initial-asset-value-iav) for all assets in an account.
 
 #### Total Liability Value
 The Total Liability Value, or Total Liabilities, represents the aggregate risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, open orders.
