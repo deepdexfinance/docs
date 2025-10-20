@@ -4,13 +4,6 @@ title: Glossary
 
 ## Core Concepts
 
-#### Risk
-Risk is a metric that measures how close a user's portfolio is to liquidation. Liquidation could be triggered when Risk rises above 100%.
-
-```math
-\text{Risk} = \frac {\text{MaintenanceMarginRequirement}} {\text{TotalCollateralValue}}
-```
-
 #### Index/Oracle Price
 The current price of an asset. It is sourced from external data providers (Currently Pyth) and is used to determine liquidations.
 
@@ -48,6 +41,15 @@ A Maker is a trader who places a limit order that is not immediately filled.
 
 #### Margin
 The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
+
+#### Margin Ratio
+The Margin Ratio of an account measures the ratio of the account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement):
+
+```math
+\text{MarginRatio} = \frac {\text{TotalCollateralValue}} {\text{MaintenanceMarginRequirement}}
+```
+
+When Margin Ratio falls below 1, the account is undercollateralized and subject to liquidation.
 
 #### Mark Price
 Mark Price, derived from a combination of the oracle price and market data, is the reference price to determine the fair, real-time value of positions and collateral for margining, risk checks, and liquidation calculations.
