@@ -4,8 +4,15 @@ title: Glossary
 
 ## Core Concepts
 
+#### Risk
+Risk is a metric that measures how close a user's portfolio is to liquidation. Liquidation could be triggered when Risk rises above 100%.
+
+```math
+\text{Risk} = \frac {\text{MaintenanceMarginRequirement}} {\text{TotalCollateralValue}}
+```
+
 #### Index/Oracle Price
-The current market price of an asset, which is sourced from external data providers (Currently Pyth) and is used to determine liquidations.
+The current price of an asset. It is sourced from external data providers (Currently Pyth) and is used to determine liquidations.
 
 #### Initial Asset Weight (IAW)
 The risk-adjusted value multiplier applied to each asset when determining how much of it can be counted as initial collateral for opening new positions or borrowing. The range of IAW is $$0 \le \text{IAW} \le 1$$.
@@ -61,10 +68,10 @@ A type of futures contract that has no expiration date. Traders can hold a posit
 A Taker is a trader who places an order that gets filled immediately against an existing order on the order book.
 
 #### Total Collateral Value
-The sum of a user's aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all held assets and [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl).
+Total Collateral Value, or Total Collateral, is the sum of a user's aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all held assets, [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl), and unsettled funding payments.
 
 #### Total Liability Value
-The Total Liability Value, or Total Liabilities, of a user's account represents the aggregate risk-weighted value of all Liabilities. It includes all liabilities arising from borrowed assets, open positions, open orders, and unsettled funding payments.
+The Total Liability Value, or Total Liabilities, represents the aggregate risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, open orders.
 
 ## Lending and Borrowing
 
@@ -91,7 +98,7 @@ The minimum amount of margin required to open a new perpetual position.
 The percentage of a new perpetual position's value required as collateral to open the position.
 
 #### Maintenance Margin
-The minimum amount of margin required to keep a perpetual position open. If your margin falls below this level, your position is at risk of liquidation.
+The minimum amount of margin required to keep a perpetual position open. 
 
 #### Maintenance Margin Ratio (MMR)
 The minimum percentage of the perpetual position value that must be maintained as collateral to keep the position open. Falling below this ratio can trigger liquidation.
