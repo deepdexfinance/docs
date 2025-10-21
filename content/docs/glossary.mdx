@@ -42,15 +42,6 @@ A Maker is a trader who places a limit order that is not immediately filled.
 #### Margin
 The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
 
-#### Margin Ratio
-The Margin Ratio of an account measures the ratio of the account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement):
-
-```math
-\text{MarginRatio} = \frac {\text{TotalCollateralValue}} {\text{MaintenanceMarginRequirement}}
-```
-
-When Margin Ratio falls below 1, the account is undercollateralized and subject to liquidation.
-
 #### Mark Price
 Mark Price, derived from a combination of the oracle price and market data, is the reference price to determine the fair, real-time value of positions and collateral for margining, risk checks, and liquidation calculations.
 
@@ -82,6 +73,15 @@ The average of the best available bid and ask prices on an order book.
 
 #### Perpetual Contract
 A type of futures contract that has no expiration date. Traders can hold a position indefinitely as long as they maintain the required margin.
+
+#### Portfolio Margin Ratio
+The Portfolio Margin Ratio of an account measures the ratio of the account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement):
+
+```math
+\text{MarginRatio} = \frac {\text{TotalCollateralValue}} {\text{MaintenanceMarginRequirement}}
+```
+
+When Portfolio Margin Ratio falls below 1, the account is undercollateralized and subject to liquidation.
 
 #### Taker
 A Taker is a trader who places an order that gets filled immediately against an existing order on the order book.
