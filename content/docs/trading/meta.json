@@ -5,6 +5,7 @@
     "market-specs",
     "perpetuals-trading",
     "funding-rates",
-    "trading-fees"
+    "trading-fees",
+    "order-types"
   ]
 }
