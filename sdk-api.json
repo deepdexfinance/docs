@@ -5,7 +5,7 @@
     "description": "Public RESTful API for DeepDEX decentralized exchange platform\n\nThis API provides access to spot and perpetual trading markets, user orders, trade history, market data, and volume statistics.\n\n**Note:** This is the public API documentation. For complete API documentation including admin endpoints, see /api-docs/openapi-admin.json\n\n## API Endpoints\n\n### Spot Trading\n- **POST /api/v1/spot/pairs** - Get all trading pairs\n- **POST /api/v1/spot/pair-by-name** - Get pair by name\n- **POST /api/v1/spot/mids** - Get all mid prices\n- **POST /api/v1/spot/volume** - Get volume statistics\n- **POST /api/v1/spot/candles** - Get candlestick data\n- **POST /api/v1/spot/user/open-orders** - Get user's open orders\n- **POST /api/v1/spot/user/history-orders** - Get user's order history\n- **POST /api/v1/spot/user/fills** - Get user's fills\n- **POST /api/v1/spot/user/fills-by-time** - Get fills by time range\n- **POST /api/v1/spot/user/order** - Get specific order\n- **POST /api/v1/spot/user/order-by-tx** - Get order by transaction hash\n\n### Perpetual Trading\n- **POST /api/v1/perp/markets** - Get all markets\n- **POST /api/v1/perp/market-by-id** - Get market by ID\n- **POST /api/v1/perp/mids** - Get all mid prices\n- **POST /api/v1/perp/volume** - Get volume statistics\n- **POST /api/v1/perp/candles** - Get candlestick data\n- **POST /api/v1/perp/user/open-orders** - Get user's open orders\n- **POST /api/v1/perp/user/history-orders** - Get user's order history\n- **POST /api/v1/perp/user/fills** - Get user's fills\n- **POST /api/v1/perp/user/fills-by-time** - Get fills by time range\n- **POST /api/v1/perp/user/order** - Get specific order\n- **POST /api/v1/perp/user/order-by-tx** - Get order by transaction hash",
     "contact": {
       "name": "DeepDEX Team",
-      "url": "https://deepdex.io"
+      "url": "https://pub-api.deepdex.finance"
     },
     "license": {
       "name": "MIT"
@@ -13,6 +13,384 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/chain/broadcast": {
+      "post": {
+        "tags": [
+          "chain"
+        ],
+        "summary": "Broadcast a signed transaction",
+        "operationId": "broadcast",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BroadcastRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction broadcasted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Broadcast transaction response",
+                      "required": [
+                        "tx_hash"
+                      ],
+                      "properties": {
+                        "tx_hash": {
+                          "type": "string",
+                          "description": "Transaction hash",
+                          "example": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid transaction"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/chain/chain-id": {
+      "get": {
+        "tags": [
+          "chain"
+        ],
+        "summary": "Get blockchain chain ID",
+        "operationId": "get_chain_id",
+        "responses": {
+          "200": {
+            "description": "Chain ID retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Chain ID response",
+                      "required": [
+                        "chain_id"
+                      ],
+                      "properties": {
+                        "chain_id": {
+                          "type": "string",
+                          "description": "Blockchain chain ID as string",
+                          "example": "222"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/chain/estimate-gas": {
+      "post": {
+        "tags": [
+          "chain"
+        ],
+        "summary": "Estimate gas for a transaction",
+        "operationId": "estimate_gas",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstimateGasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Gas estimate successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Gas estimate response",
+                      "required": [
+                        "gas"
+                      ],
+                      "properties": {
+                        "gas": {
+                          "type": "string",
+                          "description": "Estimated gas amount as string",
+                          "example": "21000"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/chain/gas-price": {
+      "get": {
+        "tags": [
+          "chain"
+        ],
+        "summary": "Get current gas price",
+        "operationId": "get_gas_price",
+        "responses": {
+          "200": {
+            "description": "Gas price retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Gas price response",
+                      "required": [
+                        "gas_price"
+                      ],
+                      "properties": {
+                        "gas_price": {
+                          "type": "string",
+                          "description": "Current gas price as string",
+                          "example": "1000000000"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/chain/transaction-count": {
+      "post": {
+        "tags": [
+          "chain"
+        ],
+        "summary": "Get user transaction count (nonce)",
+        "operationId": "get_user_transaction_count",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionCountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction count retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Transaction count (nonce) response",
+                      "required": [
+                        "nonce"
+                      ],
+                      "properties": {
+                        "nonce": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "User's nonce value",
+                          "example": 42,
+                          "minimum": 0
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid user address"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/chain/tx-status": {
+      "post": {
+        "tags": [
+          "chain"
+        ],
+        "summary": "Get transaction status",
+        "operationId": "get_tx_status",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TxStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction status retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Transaction status response",
+                      "required": [
+                        "tx_hash",
+                        "status"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "description": "Transaction status",
+                          "example": "confirmed"
+                        },
+                        "tx_hash": {
+                          "type": "string",
+                          "description": "Transaction hash",
+                          "example": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid transaction hash"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/perp/candles": {
       "post": {
         "tags": [
@@ -32,7 +410,71 @@
         },
         "responses": {
           "200": {
-            "description": "Candlestick data"
+            "description": "Candlestick data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "trade_amount",
+                          "high_price",
+                          "low_price",
+                          "open_price",
+                          "close_price"
+                        ],
+                        "properties": {
+                          "close_price": {
+                            "type": "string",
+                            "example": "3498.800000000000000000000000000000"
+                          },
+                          "high_price": {
+                            "type": "string",
+                            "example": "3629.690000000000000000000000000000"
+                          },
+                          "low_price": {
+                            "type": "string",
+                            "example": "3486.130000000000000000000000000000"
+                          },
+                          "open_price": {
+                            "type": "string",
+                            "example": "3624.030000000000000000000000000000"
+                          },
+                          "time": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "format": "int64"
+                          },
+                          "trade_amount": {
+                            "type": "string",
+                            "example": "3885.448000000000000000000000000000"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -65,7 +507,196 @@
         },
         "responses": {
           "200": {
-            "description": "Market details"
+            "description": "Market details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "create_time",
+                        "update_time",
+                        "create_user",
+                        "update_user",
+                        "market_id",
+                        "name",
+                        "save_time",
+                        "pair",
+                        "token_a",
+                        "token_a_address",
+                        "token_a_decimal",
+                        "token_b_market_id",
+                        "token_b",
+                        "token_b_address",
+                        "token_b_decimal",
+                        "network",
+                        "height",
+                        "cumulative_funding_rate",
+                        "last_cacl_funding_rate_time",
+                        "oracle_price",
+                        "max_deviation_bps",
+                        "liquid_spread_bps",
+                        "fallback_if_dlob_price_invalid",
+                        "maintenance_margin_ratio"
+                      ],
+                      "properties": {
+                        "create_time": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-06-28T18:10:16"
+                        },
+                        "create_user": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 0
+                        },
+                        "cumulative_funding_rate": {
+                          "type": "string",
+                          "description": "cumulative funding rate",
+                          "example": "4.8000000000000E-17"
+                        },
+                        "fallback_if_dlob_price_invalid": {
+                          "type": "boolean",
+                          "description": "fallback if dlob price invalid",
+                          "example": false
+                        },
+                        "height": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "height (deployed block height)",
+                          "example": 78819846,
+                          "minimum": 0
+                        },
+                        "last_cacl_funding_rate_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "last cacl funding rate time",
+                          "example": 108810000,
+                          "minimum": 0
+                        },
+                        "liquid_spread_bps": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "liquid spread bps",
+                          "example": 5000,
+                          "minimum": 0
+                        },
+                        "maintenance_margin_ratio": {
+                          "type": "string",
+                          "description": "maintenance margin ratio",
+                          "example": "456263.000000000000000000000000000000"
+                        },
+                        "market_id": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "market id",
+                          "example": 1,
+                          "minimum": 0
+                        },
+                        "max_deviation_bps": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "max deviation bps",
+                          "example": 500,
+                          "minimum": 0
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "name",
+                          "example": "ETH-PERP"
+                        },
+                        "network": {
+                          "type": "string",
+                          "description": "network (e.g. ethereum, bsc.)",
+                          "example": "Ethereum"
+                        },
+                        "oracle_price": {
+                          "type": "string",
+                          "description": "current oracle price, units: quote asset (e.g. USDT), decimal: 1e6",
+                          "example": "4562.630000000000000000000000000000"
+                        },
+                        "pair": {
+                          "type": "string",
+                          "description": "pair name (e.g. BTC/USDT)",
+                          "example": "\u0001"
+                        },
+                        "save_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "save time",
+                          "example": 0,
+                          "minimum": 0
+                        },
+                        "token_a": {
+                          "type": "string",
+                          "description": "token a symbol (e.g. BTC)",
+                          "example": "eth"
+                        },
+                        "token_a_address": {
+                          "type": "string",
+                          "description": "token a address",
+                          "example": "0x86bde473a14bc71e5c145bb9ee723ef7c3ccce6f"
+                        },
+                        "token_a_decimal": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "token a decimal",
+                          "example": 18
+                        },
+                        "token_b": {
+                          "type": "string",
+                          "description": "token b symbol (e.g. USDT)",
+                          "example": "usdt"
+                        },
+                        "token_b_address": {
+                          "type": "string",
+                          "description": "token b address",
+                          "example": "0x9f7b0d426ab89dac3ec7a58598db9c0becf2b627"
+                        },
+                        "token_b_decimal": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "token b decimal",
+                          "example": 6
+                        },
+                        "token_b_market_id": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "token b market is",
+                          "example": 2,
+                          "minimum": 0
+                        },
+                        "update_time": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-08-27T11:19:57"
+                        },
+                        "update_user": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 0
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Market not found"
@@ -95,7 +726,199 @@
         },
         "responses": {
           "200": {
-            "description": "List of all perpetual markets"
+            "description": "List of all perpetual markets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "create_time",
+                          "update_time",
+                          "create_user",
+                          "update_user",
+                          "market_id",
+                          "name",
+                          "save_time",
+                          "pair",
+                          "token_a",
+                          "token_a_address",
+                          "token_a_decimal",
+                          "token_b_market_id",
+                          "token_b",
+                          "token_b_address",
+                          "token_b_decimal",
+                          "network",
+                          "height",
+                          "cumulative_funding_rate",
+                          "last_cacl_funding_rate_time",
+                          "oracle_price",
+                          "max_deviation_bps",
+                          "liquid_spread_bps",
+                          "fallback_if_dlob_price_invalid",
+                          "maintenance_margin_ratio"
+                        ],
+                        "properties": {
+                          "create_time": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-06-28T18:10:16"
+                          },
+                          "create_user": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 0
+                          },
+                          "cumulative_funding_rate": {
+                            "type": "string",
+                            "description": "cumulative funding rate",
+                            "example": "4.8000000000000E-17"
+                          },
+                          "fallback_if_dlob_price_invalid": {
+                            "type": "boolean",
+                            "description": "fallback if dlob price invalid",
+                            "example": false
+                          },
+                          "height": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "height (deployed block height)",
+                            "example": 78819846,
+                            "minimum": 0
+                          },
+                          "last_cacl_funding_rate_time": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "last cacl funding rate time",
+                            "example": 108810000,
+                            "minimum": 0
+                          },
+                          "liquid_spread_bps": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "liquid spread bps",
+                            "example": 5000,
+                            "minimum": 0
+                          },
+                          "maintenance_margin_ratio": {
+                            "type": "string",
+                            "description": "maintenance margin ratio",
+                            "example": "456263.000000000000000000000000000000"
+                          },
+                          "market_id": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "market id",
+                            "example": 1,
+                            "minimum": 0
+                          },
+                          "max_deviation_bps": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "max deviation bps",
+                            "example": 500,
+                            "minimum": 0
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "name",
+                            "example": "ETH-PERP"
+                          },
+                          "network": {
+                            "type": "string",
+                            "description": "network (e.g. ethereum, bsc.)",
+                            "example": "Ethereum"
+                          },
+                          "oracle_price": {
+                            "type": "string",
+                            "description": "current oracle price, units: quote asset (e.g. USDT), decimal: 1e6",
+                            "example": "4562.630000000000000000000000000000"
+                          },
+                          "pair": {
+                            "type": "string",
+                            "description": "pair name (e.g. BTC/USDT)",
+                            "example": "\u0001"
+                          },
+                          "save_time": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "save time",
+                            "example": 0,
+                            "minimum": 0
+                          },
+                          "token_a": {
+                            "type": "string",
+                            "description": "token a symbol (e.g. BTC)",
+                            "example": "eth"
+                          },
+                          "token_a_address": {
+                            "type": "string",
+                            "description": "token a address",
+                            "example": "0x86bde473a14bc71e5c145bb9ee723ef7c3ccce6f"
+                          },
+                          "token_a_decimal": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "token a decimal",
+                            "example": 18
+                          },
+                          "token_b": {
+                            "type": "string",
+                            "description": "token b symbol (e.g. USDT)",
+                            "example": "usdt"
+                          },
+                          "token_b_address": {
+                            "type": "string",
+                            "description": "token b address",
+                            "example": "0x9f7b0d426ab89dac3ec7a58598db9c0becf2b627"
+                          },
+                          "token_b_decimal": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "token b decimal",
+                            "example": 6
+                          },
+                          "token_b_market_id": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "token b market is",
+                            "example": 2,
+                            "minimum": 0
+                          },
+                          "update_time": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-08-27T11:19:57"
+                          },
+                          "update_user": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 0
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error"
@@ -122,7 +945,36 @@
         },
         "responses": {
           "200": {
-            "description": "List of all mid prices"
+            "description": "List of all mid prices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string",
+                        "description": "Dynamic key-value pairs for market ID to mid price"
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error"
@@ -149,7 +1001,113 @@
         },
         "responses": {
           "200": {
-            "description": "List of fills"
+            "description": "List of fills",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "coin",
+                          "b_oid",
+                          "s_oid",
+                          "buyer",
+                          "seller",
+                          "price",
+                          "size",
+                          "buyer_leverage",
+                          "seller_leverage",
+                          "buy_margin",
+                          "sell_margin",
+                          "filled_direction",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "b_oid": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 399766,
+                            "minimum": 0
+                          },
+                          "buy_margin": {
+                            "type": "string",
+                            "example": "349.109680000000000000000000000000"
+                          },
+                          "buyer": {
+                            "type": "string",
+                            "example": "0xfe0ac5bacaea28e8e29951c02280d984ade5b811"
+                          },
+                          "buyer_leverage": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 10,
+                            "minimum": 0
+                          },
+                          "coin": {
+                            "type": "string",
+                            "example": "ETH"
+                          },
+                          "filled_direction": {
+                            "type": "string",
+                            "example": "Long"
+                          },
+                          "price": {
+                            "type": "string",
+                            "example": "3506.420000000000000000000000000000"
+                          },
+                          "s_oid": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 519063,
+                            "minimum": 0
+                          },
+                          "sell_margin": {
+                            "type": "string",
+                            "example": "1629.433370000000000000000000000000"
+                          },
+                          "seller": {
+                            "type": "string",
+                            "example": "0x2394487877bbcdd12f6a7a904fc8aedf3223fc50"
+                          },
+                          "seller_leverage": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 10,
+                            "minimum": 0
+                          },
+                          "size": {
+                            "type": "string",
+                            "example": "0.995000000000000000000000000000"
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1762267664
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -179,7 +1137,113 @@
         },
         "responses": {
           "200": {
-            "description": "List of fills in time range"
+            "description": "List of fills in time range",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "coin",
+                          "b_oid",
+                          "s_oid",
+                          "buyer",
+                          "seller",
+                          "price",
+                          "size",
+                          "buyer_leverage",
+                          "seller_leverage",
+                          "buy_margin",
+                          "sell_margin",
+                          "filled_direction",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "b_oid": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 399766,
+                            "minimum": 0
+                          },
+                          "buy_margin": {
+                            "type": "string",
+                            "example": "349.109680000000000000000000000000"
+                          },
+                          "buyer": {
+                            "type": "string",
+                            "example": "0xfe0ac5bacaea28e8e29951c02280d984ade5b811"
+                          },
+                          "buyer_leverage": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 10,
+                            "minimum": 0
+                          },
+                          "coin": {
+                            "type": "string",
+                            "example": "ETH"
+                          },
+                          "filled_direction": {
+                            "type": "string",
+                            "example": "Long"
+                          },
+                          "price": {
+                            "type": "string",
+                            "example": "3506.420000000000000000000000000000"
+                          },
+                          "s_oid": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 519063,
+                            "minimum": 0
+                          },
+                          "sell_margin": {
+                            "type": "string",
+                            "example": "1629.433370000000000000000000000000"
+                          },
+                          "seller": {
+                            "type": "string",
+                            "example": "0x2394487877bbcdd12f6a7a904fc8aedf3223fc50"
+                          },
+                          "seller_leverage": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 10,
+                            "minimum": 0
+                          },
+                          "size": {
+                            "type": "string",
+                            "example": "0.995000000000000000000000000000"
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1762267664
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -209,7 +1273,138 @@
         },
         "responses": {
           "200": {
-            "description": "List of historical orders"
+            "description": "List of historical orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "coin",
+                          "oid",
+                          "is_long",
+                          "size",
+                          "price",
+                          "order_type",
+                          "leverage",
+                          "isolated",
+                          "margin",
+                          "status",
+                          "size_filled",
+                          "size_remain",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "coin": {
+                            "type": "string",
+                            "example": "ETH"
+                          },
+                          "is_long": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "isolated": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "leverage": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 10,
+                            "minimum": 0
+                          },
+                          "margin": {
+                            "type": "string",
+                            "example": "4194.968080000000000000000000000000"
+                          },
+                          "oid": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 519046,
+                            "minimum": 0
+                          },
+                          "order_type": {
+                            "type": "string",
+                            "example": "Limit"
+                          },
+                          "price": {
+                            "type": "string",
+                            "example": "3515.140000000000000000000000000000"
+                          },
+                          "size": {
+                            "type": "string",
+                            "example": "11.934000000000000000000000000000"
+                          },
+                          "size_filled": {
+                            "type": "string",
+                            "example": "5.951000000000000000000000000000"
+                          },
+                          "size_remain": {
+                            "type": "string",
+                            "example": "5.983000000000000000000000000000"
+                          },
+                          "slippage": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "format": "int64",
+                            "minimum": 0
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "Init"
+                          },
+                          "stop_loss": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "3444.840000000000000000000000000000"
+                          },
+                          "take_profit": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "3585.440000000000000000000000000000"
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1762267258
+                          },
+                          "tx_hash": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "0x371db43344dcfabcdfeffb73257ca6e11ff7f9d6a237480eaa8712f925fc78bb"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -239,7 +1434,138 @@
         },
         "responses": {
           "200": {
-            "description": "List of open orders"
+            "description": "List of open orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "coin",
+                          "oid",
+                          "is_long",
+                          "size",
+                          "price",
+                          "order_type",
+                          "leverage",
+                          "isolated",
+                          "margin",
+                          "status",
+                          "size_filled",
+                          "size_remain",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "coin": {
+                            "type": "string",
+                            "example": "ETH"
+                          },
+                          "is_long": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "isolated": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "leverage": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 10,
+                            "minimum": 0
+                          },
+                          "margin": {
+                            "type": "string",
+                            "example": "4194.968080000000000000000000000000"
+                          },
+                          "oid": {
+                            "type": "integer",
+                            "format": "int32",
+                            "example": 519046,
+                            "minimum": 0
+                          },
+                          "order_type": {
+                            "type": "string",
+                            "example": "Limit"
+                          },
+                          "price": {
+                            "type": "string",
+                            "example": "3515.140000000000000000000000000000"
+                          },
+                          "size": {
+                            "type": "string",
+                            "example": "11.934000000000000000000000000000"
+                          },
+                          "size_filled": {
+                            "type": "string",
+                            "example": "5.951000000000000000000000000000"
+                          },
+                          "size_remain": {
+                            "type": "string",
+                            "example": "5.983000000000000000000000000000"
+                          },
+                          "slippage": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "format": "int64",
+                            "minimum": 0
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "Init"
+                          },
+                          "stop_loss": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "3444.840000000000000000000000000000"
+                          },
+                          "take_profit": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "3585.440000000000000000000000000000"
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1762267258
+                          },
+                          "tx_hash": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "0x371db43344dcfabcdfeffb73257ca6e11ff7f9d6a237480eaa8712f925fc78bb"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -269,7 +1595,135 @@
         },
         "responses": {
           "200": {
-            "description": "Order details"
+            "description": "Order details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "coin",
+                        "oid",
+                        "is_long",
+                        "size",
+                        "price",
+                        "order_type",
+                        "leverage",
+                        "isolated",
+                        "margin",
+                        "status",
+                        "size_filled",
+                        "size_remain",
+                        "timestamp"
+                      ],
+                      "properties": {
+                        "coin": {
+                          "type": "string",
+                          "example": "ETH"
+                        },
+                        "is_long": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "isolated": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "leverage": {
+                          "type": "integer",
+                          "format": "int32",
+                          "example": 10,
+                          "minimum": 0
+                        },
+                        "margin": {
+                          "type": "string",
+                          "example": "4194.968080000000000000000000000000"
+                        },
+                        "oid": {
+                          "type": "integer",
+                          "format": "int32",
+                          "example": 519046,
+                          "minimum": 0
+                        },
+                        "order_type": {
+                          "type": "string",
+                          "example": "Limit"
+                        },
+                        "price": {
+                          "type": "string",
+                          "example": "3515.140000000000000000000000000000"
+                        },
+                        "size": {
+                          "type": "string",
+                          "example": "11.934000000000000000000000000000"
+                        },
+                        "size_filled": {
+                          "type": "string",
+                          "example": "5.951000000000000000000000000000"
+                        },
+                        "size_remain": {
+                          "type": "string",
+                          "example": "5.983000000000000000000000000000"
+                        },
+                        "slippage": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "format": "int64",
+                          "minimum": 0
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "Init"
+                        },
+                        "stop_loss": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "example": "3444.840000000000000000000000000000"
+                        },
+                        "take_profit": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "example": "3585.440000000000000000000000000000"
+                        },
+                        "timestamp": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 1762267258
+                        },
+                        "tx_hash": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "example": "0x371db43344dcfabcdfeffb73257ca6e11ff7f9d6a237480eaa8712f925fc78bb"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Order not found"
@@ -299,7 +1753,135 @@
         },
         "responses": {
           "200": {
-            "description": "Order details"
+            "description": "Order details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "coin",
+                        "oid",
+                        "is_long",
+                        "size",
+                        "price",
+                        "order_type",
+                        "leverage",
+                        "isolated",
+                        "margin",
+                        "status",
+                        "size_filled",
+                        "size_remain",
+                        "timestamp"
+                      ],
+                      "properties": {
+                        "coin": {
+                          "type": "string",
+                          "example": "ETH"
+                        },
+                        "is_long": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "isolated": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "leverage": {
+                          "type": "integer",
+                          "format": "int32",
+                          "example": 10,
+                          "minimum": 0
+                        },
+                        "margin": {
+                          "type": "string",
+                          "example": "4194.968080000000000000000000000000"
+                        },
+                        "oid": {
+                          "type": "integer",
+                          "format": "int32",
+                          "example": 519046,
+                          "minimum": 0
+                        },
+                        "order_type": {
+                          "type": "string",
+                          "example": "Limit"
+                        },
+                        "price": {
+                          "type": "string",
+                          "example": "3515.140000000000000000000000000000"
+                        },
+                        "size": {
+                          "type": "string",
+                          "example": "11.934000000000000000000000000000"
+                        },
+                        "size_filled": {
+                          "type": "string",
+                          "example": "5.951000000000000000000000000000"
+                        },
+                        "size_remain": {
+                          "type": "string",
+                          "example": "5.983000000000000000000000000000"
+                        },
+                        "slippage": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "format": "int64",
+                          "minimum": 0
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "Init"
+                        },
+                        "stop_loss": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "example": "3444.840000000000000000000000000000"
+                        },
+                        "take_profit": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "example": "3585.440000000000000000000000000000"
+                        },
+                        "timestamp": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 1762267258
+                        },
+                        "tx_hash": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "example": "0x371db43344dcfabcdfeffb73257ca6e11ff7f9d6a237480eaa8712f925fc78bb"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Order not found"
@@ -330,7 +1912,71 @@
         },
         "responses": {
           "200": {
-            "description": "Volume statistics"
+            "description": "Volume statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Volume statistics data structure (used by both spot and perp)",
+                      "required": [
+                        "total_volume",
+                        "trade_count",
+                        "start_time",
+                        "end_time",
+                        "statistic_time"
+                      ],
+                      "properties": {
+                        "end_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "End time (milliseconds timestamp)",
+                          "example": 1762227386326
+                        },
+                        "start_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Start time (milliseconds timestamp)",
+                          "example": 1762140986326
+                        },
+                        "statistic_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Statistics time (milliseconds timestamp)",
+                          "example": 1762227386326
+                        },
+                        "total_volume": {
+                          "type": "string",
+                          "description": "Total trading volume",
+                          "example": "20588.239110049000000000"
+                        },
+                        "trade_count": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Number of trades",
+                          "example": 4121
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -363,7 +2009,71 @@
         },
         "responses": {
           "200": {
-            "description": "Candlestick data"
+            "description": "Candlestick data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "trade_amount",
+                          "high_price",
+                          "low_price",
+                          "open_price",
+                          "close_price"
+                        ],
+                        "properties": {
+                          "close_price": {
+                            "type": "string",
+                            "example": "3498.800000000000000000000000000000"
+                          },
+                          "high_price": {
+                            "type": "string",
+                            "example": "3629.690000000000000000000000000000"
+                          },
+                          "low_price": {
+                            "type": "string",
+                            "example": "3486.130000000000000000000000000000"
+                          },
+                          "open_price": {
+                            "type": "string",
+                            "example": "3624.030000000000000000000000000000"
+                          },
+                          "time": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "format": "int64"
+                          },
+                          "trade_amount": {
+                            "type": "string",
+                            "example": "3885.448000000000000000000000000000"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -396,7 +2106,36 @@
         },
         "responses": {
           "200": {
-            "description": "List of all mid prices"
+            "description": "List of all mid prices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string",
+                        "description": "Dynamic key-value pairs for market ID to mid price"
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error"
@@ -423,7 +2162,93 @@
         },
         "responses": {
           "200": {
-            "description": "Trading pair details"
+            "description": "Trading pair details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Spot trading pair information",
+                      "required": [
+                        "name",
+                        "address",
+                        "token_a",
+                        "token_a_address",
+                        "token_a_decimal",
+                        "token_b",
+                        "token_b_address",
+                        "token_b_decimal",
+                        "pair_id"
+                      ],
+                      "properties": {
+                        "address": {
+                          "type": "string",
+                          "description": "Contract address",
+                          "example": "0x000000000000000000000000000000000000044d"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Trading pair name",
+                          "example": "ETH/USDT"
+                        },
+                        "pair_id": {
+                          "type": "string",
+                          "description": "Substrate pair ID",
+                          "example": "0xadfb870c1aa7e97bd82e5823253a0ff2fb8a4342345e2365da4fe0829c65bba2"
+                        },
+                        "token_a": {
+                          "type": "string",
+                          "description": "Token A symbol",
+                          "example": "USDT"
+                        },
+                        "token_a_address": {
+                          "type": "string",
+                          "description": "Token A address",
+                          "example": "0x6cee360aff82c7b3ffce3ce0711b5dc3dc4111d3"
+                        },
+                        "token_a_decimal": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "Token A decimals",
+                          "example": 6
+                        },
+                        "token_b": {
+                          "type": "string",
+                          "description": "Token B symbol",
+                          "example": "ETH"
+                        },
+                        "token_b_address": {
+                          "type": "string",
+                          "description": "Token B address",
+                          "example": "0x86bdE473a14BC71E5c145BB9eE723eF7c3cCCe6F"
+                        },
+                        "token_b_decimal": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "Token B decimals",
+                          "example": 18
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Pair not found"
@@ -453,7 +2278,96 @@
         },
         "responses": {
           "200": {
-            "description": "List of all spot trading pairs"
+            "description": "List of all spot trading pairs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "description": "Spot trading pair information",
+                        "required": [
+                          "name",
+                          "address",
+                          "token_a",
+                          "token_a_address",
+                          "token_a_decimal",
+                          "token_b",
+                          "token_b_address",
+                          "token_b_decimal",
+                          "pair_id"
+                        ],
+                        "properties": {
+                          "address": {
+                            "type": "string",
+                            "description": "Contract address",
+                            "example": "0x000000000000000000000000000000000000044d"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Trading pair name",
+                            "example": "ETH/USDT"
+                          },
+                          "pair_id": {
+                            "type": "string",
+                            "description": "Substrate pair ID",
+                            "example": "0xadfb870c1aa7e97bd82e5823253a0ff2fb8a4342345e2365da4fe0829c65bba2"
+                          },
+                          "token_a": {
+                            "type": "string",
+                            "description": "Token A symbol",
+                            "example": "USDT"
+                          },
+                          "token_a_address": {
+                            "type": "string",
+                            "description": "Token A address",
+                            "example": "0x6cee360aff82c7b3ffce3ce0711b5dc3dc4111d3"
+                          },
+                          "token_a_decimal": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "Token A decimals",
+                            "example": 6
+                          },
+                          "token_b": {
+                            "type": "string",
+                            "description": "Token B symbol",
+                            "example": "ETH"
+                          },
+                          "token_b_address": {
+                            "type": "string",
+                            "description": "Token B address",
+                            "example": "0x86bdE473a14BC71E5c145BB9eE723eF7c3cCCe6F"
+                          },
+                          "token_b_decimal": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "Token B decimals",
+                            "example": 18
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error"
@@ -480,7 +2394,102 @@
         },
         "responses": {
           "200": {
-            "description": "List of fills"
+            "description": "List of fills",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "coin",
+                          "order_type",
+                          "b_oid",
+                          "s_oid",
+                          "price",
+                          "a_amount",
+                          "b_amount",
+                          "trade_type",
+                          "tx_hash",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "a_amount": {
+                            "type": "string",
+                            "example": "19.059600000000000000000000000000"
+                          },
+                          "b_amount": {
+                            "type": "string",
+                            "example": "0.120000000000000000000000000000"
+                          },
+                          "b_oid": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 315191,
+                            "minimum": 0
+                          },
+                          "coin": {
+                            "type": "string",
+                            "example": "SOL/USDT"
+                          },
+                          "fee": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "0.050000000000000000000000000000"
+                          },
+                          "order_type": {
+                            "$ref": "#/components/schemas/SpotOrderType"
+                          },
+                          "price": {
+                            "type": "string",
+                            "example": "158.830000000000000000000000000000"
+                          },
+                          "s_oid": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 361310,
+                            "minimum": 0
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1762264313
+                          },
+                          "trade_type": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "0 sell fully completed, 1 buy fully completed, 2 both sell and buy fully completed",
+                            "example": 0
+                          },
+                          "tx_hash": {
+                            "type": "string",
+                            "example": ""
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -510,7 +2519,102 @@
         },
         "responses": {
           "200": {
-            "description": "List of fills in time range"
+            "description": "List of fills in time range",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "coin",
+                          "order_type",
+                          "b_oid",
+                          "s_oid",
+                          "price",
+                          "a_amount",
+                          "b_amount",
+                          "trade_type",
+                          "tx_hash",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "a_amount": {
+                            "type": "string",
+                            "example": "19.059600000000000000000000000000"
+                          },
+                          "b_amount": {
+                            "type": "string",
+                            "example": "0.120000000000000000000000000000"
+                          },
+                          "b_oid": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 315191,
+                            "minimum": 0
+                          },
+                          "coin": {
+                            "type": "string",
+                            "example": "SOL/USDT"
+                          },
+                          "fee": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "0.050000000000000000000000000000"
+                          },
+                          "order_type": {
+                            "$ref": "#/components/schemas/SpotOrderType"
+                          },
+                          "price": {
+                            "type": "string",
+                            "example": "158.830000000000000000000000000000"
+                          },
+                          "s_oid": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 361310,
+                            "minimum": 0
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1762264313
+                          },
+                          "trade_type": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "0 sell fully completed, 1 buy fully completed, 2 both sell and buy fully completed",
+                            "example": 0
+                          },
+                          "tx_hash": {
+                            "type": "string",
+                            "example": ""
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -540,7 +2644,110 @@
         },
         "responses": {
           "200": {
-            "description": "List of historical orders"
+            "description": "List of historical orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "coin",
+                          "oid",
+                          "price",
+                          "order_type",
+                          "status",
+                          "token_a_amount",
+                          "token_a_remaining_amount",
+                          "token_b_amount",
+                          "token_b_remaining_amount",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "coin": {
+                            "type": "string",
+                            "example": "SOL/USDT"
+                          },
+                          "oid": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 4121,
+                            "minimum": 0
+                          },
+                          "order_type": {
+                            "$ref": "#/components/schemas/SpotOrderType",
+                            "description": "0-Sell order, 1-Buy order"
+                          },
+                          "price": {
+                            "type": "string",
+                            "example": "160.410000000000000000000000000000"
+                          },
+                          "slippage": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "format": "int64",
+                            "example": 0,
+                            "minimum": 0
+                          },
+                          "status": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "Order status: 0 for active, 1 for success, 2 for pending, -1 for cancelled",
+                            "example": 2
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1762263558
+                          },
+                          "token_a_amount": {
+                            "type": "string",
+                            "example": "3492.125700000000000000000000000000"
+                          },
+                          "token_a_remaining_amount": {
+                            "type": "string",
+                            "example": "3302.810602000000000000000000000000"
+                          },
+                          "token_b_amount": {
+                            "type": "string",
+                            "example": "21.770000000000000000000000000000"
+                          },
+                          "token_b_remaining_amount": {
+                            "type": "string",
+                            "example": "20.589804888000000000000000000000"
+                          },
+                          "tx_hash": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "0x294175382ed6d84ff1a28bd09172cf2f3e23c4ae52ee5eeb1bfd21e343b6ea53"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -570,7 +2777,110 @@
         },
         "responses": {
           "200": {
-            "description": "List of open orders"
+            "description": "List of open orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "coin",
+                          "oid",
+                          "price",
+                          "order_type",
+                          "status",
+                          "token_a_amount",
+                          "token_a_remaining_amount",
+                          "token_b_amount",
+                          "token_b_remaining_amount",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "coin": {
+                            "type": "string",
+                            "example": "SOL/USDT"
+                          },
+                          "oid": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 4121,
+                            "minimum": 0
+                          },
+                          "order_type": {
+                            "$ref": "#/components/schemas/SpotOrderType",
+                            "description": "0-Sell order, 1-Buy order"
+                          },
+                          "price": {
+                            "type": "string",
+                            "example": "160.410000000000000000000000000000"
+                          },
+                          "slippage": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "format": "int64",
+                            "example": 0,
+                            "minimum": 0
+                          },
+                          "status": {
+                            "type": "integer",
+                            "format": "int32",
+                            "description": "Order status: 0 for active, 1 for success, 2 for pending, -1 for cancelled",
+                            "example": 2
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1762263558
+                          },
+                          "token_a_amount": {
+                            "type": "string",
+                            "example": "3492.125700000000000000000000000000"
+                          },
+                          "token_a_remaining_amount": {
+                            "type": "string",
+                            "example": "3302.810602000000000000000000000000"
+                          },
+                          "token_b_amount": {
+                            "type": "string",
+                            "example": "21.770000000000000000000000000000"
+                          },
+                          "token_b_remaining_amount": {
+                            "type": "string",
+                            "example": "20.589804888000000000000000000000"
+                          },
+                          "tx_hash": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "example": "0x294175382ed6d84ff1a28bd09172cf2f3e23c4ae52ee5eeb1bfd21e343b6ea53"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -600,7 +2910,107 @@
         },
         "responses": {
           "200": {
-            "description": "Order details"
+            "description": "Order details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "coin",
+                        "oid",
+                        "price",
+                        "order_type",
+                        "status",
+                        "token_a_amount",
+                        "token_a_remaining_amount",
+                        "token_b_amount",
+                        "token_b_remaining_amount",
+                        "timestamp"
+                      ],
+                      "properties": {
+                        "coin": {
+                          "type": "string",
+                          "example": "SOL/USDT"
+                        },
+                        "oid": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 4121,
+                          "minimum": 0
+                        },
+                        "order_type": {
+                          "$ref": "#/components/schemas/SpotOrderType",
+                          "description": "0-Sell order, 1-Buy order"
+                        },
+                        "price": {
+                          "type": "string",
+                          "example": "160.410000000000000000000000000000"
+                        },
+                        "slippage": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "format": "int64",
+                          "example": 0,
+                          "minimum": 0
+                        },
+                        "status": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "Order status: 0 for active, 1 for success, 2 for pending, -1 for cancelled",
+                          "example": 2
+                        },
+                        "timestamp": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 1762263558
+                        },
+                        "token_a_amount": {
+                          "type": "string",
+                          "example": "3492.125700000000000000000000000000"
+                        },
+                        "token_a_remaining_amount": {
+                          "type": "string",
+                          "example": "3302.810602000000000000000000000000"
+                        },
+                        "token_b_amount": {
+                          "type": "string",
+                          "example": "21.770000000000000000000000000000"
+                        },
+                        "token_b_remaining_amount": {
+                          "type": "string",
+                          "example": "20.589804888000000000000000000000"
+                        },
+                        "tx_hash": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "example": "0x294175382ed6d84ff1a28bd09172cf2f3e23c4ae52ee5eeb1bfd21e343b6ea53"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Order not found"
@@ -630,7 +3040,107 @@
         },
         "responses": {
           "200": {
-            "description": "Order details"
+            "description": "Order details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "coin",
+                        "oid",
+                        "price",
+                        "order_type",
+                        "status",
+                        "token_a_amount",
+                        "token_a_remaining_amount",
+                        "token_b_amount",
+                        "token_b_remaining_amount",
+                        "timestamp"
+                      ],
+                      "properties": {
+                        "coin": {
+                          "type": "string",
+                          "example": "SOL/USDT"
+                        },
+                        "oid": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 4121,
+                          "minimum": 0
+                        },
+                        "order_type": {
+                          "$ref": "#/components/schemas/SpotOrderType",
+                          "description": "0-Sell order, 1-Buy order"
+                        },
+                        "price": {
+                          "type": "string",
+                          "example": "160.410000000000000000000000000000"
+                        },
+                        "slippage": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "format": "int64",
+                          "example": 0,
+                          "minimum": 0
+                        },
+                        "status": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "Order status: 0 for active, 1 for success, 2 for pending, -1 for cancelled",
+                          "example": 2
+                        },
+                        "timestamp": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 1762263558
+                        },
+                        "token_a_amount": {
+                          "type": "string",
+                          "example": "3492.125700000000000000000000000000"
+                        },
+                        "token_a_remaining_amount": {
+                          "type": "string",
+                          "example": "3302.810602000000000000000000000000"
+                        },
+                        "token_b_amount": {
+                          "type": "string",
+                          "example": "21.770000000000000000000000000000"
+                        },
+                        "token_b_remaining_amount": {
+                          "type": "string",
+                          "example": "20.589804888000000000000000000000"
+                        },
+                        "tx_hash": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "example": "0x294175382ed6d84ff1a28bd09172cf2f3e23c4ae52ee5eeb1bfd21e343b6ea53"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Order not found"
@@ -661,7 +3171,71 @@
         },
         "responses": {
           "200": {
-            "description": "Volume statistics"
+            "description": "Volume statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Volume statistics data structure (used by both spot and perp)",
+                      "required": [
+                        "total_volume",
+                        "trade_count",
+                        "start_time",
+                        "end_time",
+                        "statistic_time"
+                      ],
+                      "properties": {
+                        "end_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "End time (milliseconds timestamp)",
+                          "example": 1762227386326
+                        },
+                        "start_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Start time (milliseconds timestamp)",
+                          "example": 1762140986326
+                        },
+                        "statistic_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Statistics time (milliseconds timestamp)",
+                          "example": 1762227386326
+                        },
+                        "total_volume": {
+                          "type": "string",
+                          "description": "Total trading volume",
+                          "example": "20588.239110049000000000"
+                        },
+                        "trade_count": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Number of trades",
+                          "example": 4121
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -678,30 +3252,111 @@
   },
   "components": {
     "schemas": {
+      "BroadcastRequest": {
+        "type": "object",
+        "description": "Request for broadcasting a transaction",
+        "required": [
+          "raw_tx",
+          "user"
+        ],
+        "properties": {
+          "raw_tx": {
+            "type": "string",
+            "description": "Raw transaction hex string",
+            "example": "0x02f8..."
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x1234567890123456789012345678901234567890"
+          }
+        }
+      },
+      "BroadcastResponse": {
+        "type": "object",
+        "description": "Broadcast transaction response",
+        "required": [
+          "tx_hash"
+        ],
+        "properties": {
+          "tx_hash": {
+            "type": "string",
+            "description": "Transaction hash",
+            "example": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+          }
+        }
+      },
+      "ChainIdResponse": {
+        "type": "object",
+        "description": "Chain ID response",
+        "required": [
+          "chain_id"
+        ],
+        "properties": {
+          "chain_id": {
+            "type": "string",
+            "description": "Blockchain chain ID as string",
+            "example": "222"
+          }
+        }
+      },
       "EmptyRequest": {
         "type": "object",
         "description": "Empty request (for endpoints that don't need parameters)"
+      },
+      "EstimateGasRequest": {
+        "allOf": [
+          {
+            "type": "object",
+            "description": "Transaction request"
+          }
+        ],
+        "description": "Request for estimating gas"
+      },
+      "EstimateGasResponse": {
+        "type": "object",
+        "description": "Gas estimate response",
+        "required": [
+          "gas"
+        ],
+        "properties": {
+          "gas": {
+            "type": "string",
+            "description": "Estimated gas amount as string",
+            "example": "21000"
+          }
+        }
+      },
+      "GasPriceResponse": {
+        "type": "object",
+        "description": "Gas price response",
+        "required": [
+          "gas_price"
+        ],
+        "properties": {
+          "gas_price": {
+            "type": "string",
+            "description": "Current gas price as string",
+            "example": "1000000000"
+          }
+        }
       },
       "PerpCandleRequest": {
         "type": "object",
         "description": "Request for perp candle snapshot",
         "required": [
-          "dex",
-          "candleInterval"
+          "market_id",
+          "candle_interval",
+          "start"
         ],
         "properties": {
-          "candleInterval": {
+          "candle_interval": {
             "type": "integer",
             "format": "int32",
             "description": "Candle interval: 0:hour, 1:day, 2:month, 3:minute, 4:15minutes",
             "example": 0,
             "maximum": 4,
             "minimum": 0
-          },
-          "dex": {
-            "type": "string",
-            "description": "Market name (e.g., \"BTC-USDT\")",
-            "example": "BTC-USDT"
           },
           "end": {
             "type": [
@@ -719,13 +3374,18 @@
             "maximum": 5000,
             "minimum": 1
           },
+          "market_id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Market ID",
+            "example": 1,
+            "minimum": 0
+          },
           "start": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": "integer",
             "format": "int64",
-            "description": "Start time for the query (milliseconds timestamp)"
+            "description": "Start time for the query (milliseconds timestamp)",
+            "example": 1762227386326
           }
         }
       },
@@ -764,11 +3424,11 @@
         "description": "Request for perp order by ID",
         "required": [
           "user",
-          "marketId",
+          "market_id",
           "oid"
         ],
         "properties": {
-          "marketId": {
+          "market_id": {
             "type": "integer",
             "format": "int32",
             "description": "Market ID",
@@ -785,7 +3445,7 @@
           "user": {
             "type": "string",
             "description": "User wallet address",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            "example": "0x2394487877bbcdd12f6a7a904fc8aedf3223fc50"
           }
         }
       },
@@ -794,7 +3454,8 @@
         "description": "Request for perp user fills by time",
         "required": [
           "user",
-          "marketId"
+          "market_id",
+          "start"
         ],
         "properties": {
           "end": {
@@ -813,7 +3474,7 @@
             "maximum": 1000,
             "minimum": 1
           },
-          "marketId": {
+          "market_id": {
             "type": "integer",
             "format": "int32",
             "description": "Market ID",
@@ -821,17 +3482,15 @@
             "minimum": 0
           },
           "start": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": "integer",
             "format": "int64",
-            "description": "Start time for the query (milliseconds timestamp)"
+            "description": "Start time for the query (milliseconds timestamp)",
+            "example": 1762227386326
           },
           "user": {
             "type": "string",
             "description": "User wallet address",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            "example": "0x2394487877bbcdd12f6a7a904fc8aedf3223fc50"
           }
         }
       },
@@ -840,7 +3499,7 @@
         "description": "Request for perp user fills",
         "required": [
           "user",
-          "marketId"
+          "market_id"
         ],
         "properties": {
           "limit": {
@@ -851,7 +3510,7 @@
             "maximum": 1000,
             "minimum": 1
           },
-          "marketId": {
+          "market_id": {
             "type": "integer",
             "format": "int32",
             "description": "Market ID",
@@ -861,7 +3520,7 @@
           "user": {
             "type": "string",
             "description": "User wallet address",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            "example": "0x2394487877bbcdd12f6a7a904fc8aedf3223fc50"
           }
         }
       },
@@ -870,7 +3529,7 @@
         "description": "Request for perp user orders (open or historical)",
         "required": [
           "user",
-          "marketId"
+          "market_id"
         ],
         "properties": {
           "limit": {
@@ -881,7 +3540,7 @@
             "maximum": 1000,
             "minimum": 1
           },
-          "marketId": {
+          "market_id": {
             "type": "integer",
             "format": "int32",
             "description": "Market ID",
@@ -891,7 +3550,7 @@
           "user": {
             "type": "string",
             "description": "User wallet address",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            "example": "0x2394487877bbcdd12f6a7a904fc8aedf3223fc50"
           }
         }
       },
@@ -921,10 +3580,11 @@
         "description": "Request for spot candle snapshot",
         "required": [
           "dex",
-          "candleInterval"
+          "candle_interval",
+          "start"
         ],
         "properties": {
-          "candleInterval": {
+          "candle_interval": {
             "type": "integer",
             "format": "int32",
             "description": "Candle interval: 0:hour, 1:day, 2:month, 3:minute, 4:15minutes",
@@ -943,7 +3603,7 @@
               "null"
             ],
             "format": "int64",
-            "description": "End time for the query (milliseconds timestamp)"
+            "description": "End time for the query (milliseconds timestamp, optional)"
           },
           "limit": {
             "type": "integer",
@@ -954,12 +3614,10 @@
             "minimum": 1
           },
           "start": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": "integer",
             "format": "int64",
-            "description": "Start time for the query (milliseconds timestamp)"
+            "description": "Start time for the query (milliseconds timestamp)",
+            "example": 1762227386326
           }
         }
       },
@@ -1016,10 +3674,10 @@
         "type": "object",
         "description": "Request for getting a specific spot pair by name",
         "required": [
-          "pairName"
+          "pair_name"
         ],
         "properties": {
-          "pairName": {
+          "pair_name": {
             "type": "string",
             "description": "Trading pair name (e.g., \"SOL/USDT\")",
             "example": "SOL/USDT"
@@ -1031,7 +3689,8 @@
         "description": "Request for spot user fills by time",
         "required": [
           "user",
-          "dex"
+          "dex",
+          "start"
         ],
         "properties": {
           "dex": {
@@ -1056,17 +3715,15 @@
             "minimum": 1
           },
           "start": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": "integer",
             "format": "int64",
-            "description": "Start time for the query (milliseconds timestamp)"
+            "description": "Start time for the query (milliseconds timestamp)",
+            "example": 1762227386326
           },
           "user": {
             "type": "string",
             "description": "User wallet address",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            "example": "0x0fa364a1dc8c0e175dfb76f79859717ca6fa3223"
           }
         }
       },
@@ -1094,7 +3751,7 @@
           "user": {
             "type": "string",
             "description": "User wallet address",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+            "example": "0x0fa364a1dc8c0e175dfb76f79859717ca6fa3223"
           }
         }
       },
@@ -1119,7 +3776,7 @@
             "maximum": 1000,
             "minimum": 1
           },
-          "orderType": {
+          "order_type": {
             "oneOf": [
               {
                 "type": "null"
@@ -1156,46 +3813,119 @@
           }
         }
       },
-      "VolumeStatistics": {
+      "TransactionCountRequest": {
         "type": "object",
-        "description": "Volume statistics data structure",
+        "description": "Request for getting user transaction count (nonce)",
         "required": [
-          "totalVolume",
-          "tradeCount",
-          "startTime",
-          "endTime",
-          "statisticTime"
+          "user"
         ],
         "properties": {
-          "endTime": {
-            "type": "integer",
-            "format": "int64",
-            "description": "End time (milliseconds timestamp)"
-          },
-          "startTime": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Start time (milliseconds timestamp)"
-          },
-          "statisticTime": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Statistics time (milliseconds timestamp)"
-          },
-          "totalVolume": {
+          "user": {
             "type": "string",
-            "description": "Total trading volume"
-          },
-          "tradeCount": {
+            "description": "User wallet address",
+            "example": "0x1234567890123456789012345678901234567890"
+          }
+        }
+      },
+      "TransactionCountResponse": {
+        "type": "object",
+        "description": "Transaction count (nonce) response",
+        "required": [
+          "nonce"
+        ],
+        "properties": {
+          "nonce": {
             "type": "integer",
             "format": "int64",
-            "description": "Number of trades"
+            "description": "User's nonce value",
+            "example": 42,
+            "minimum": 0
+          }
+        }
+      },
+      "TxStatusRequest": {
+        "type": "object",
+        "description": "Request for checking transaction status",
+        "required": [
+          "tx_hash"
+        ],
+        "properties": {
+          "tx_hash": {
+            "type": "string",
+            "description": "Transaction hash",
+            "example": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+          }
+        }
+      },
+      "TxStatusResponse": {
+        "type": "object",
+        "description": "Transaction status response",
+        "required": [
+          "tx_hash",
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Transaction status",
+            "example": "confirmed"
+          },
+          "tx_hash": {
+            "type": "string",
+            "description": "Transaction hash",
+            "example": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+          }
+        }
+      },
+      "VolumeStatistics": {
+        "type": "object",
+        "description": "Volume statistics data structure (used by both spot and perp)",
+        "required": [
+          "total_volume",
+          "trade_count",
+          "start_time",
+          "end_time",
+          "statistic_time"
+        ],
+        "properties": {
+          "end_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "End time (milliseconds timestamp)",
+            "example": 1762227386326
+          },
+          "start_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Start time (milliseconds timestamp)",
+            "example": 1762140986326
+          },
+          "statistic_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Statistics time (milliseconds timestamp)",
+            "example": 1762227386326
+          },
+          "total_volume": {
+            "type": "string",
+            "description": "Total trading volume",
+            "example": "20588.239110049000000000"
+          },
+          "trade_count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of trades",
+            "example": 4121
           }
         }
       }
     }
   },
   "tags": [
+    {
+      "name": "chain",
+      "description": "Blockchain interaction endpoints (gas, nonce, broadcasting)"
+    },
     {
       "name": "spot",
       "description": "Spot trading market endpoints"
