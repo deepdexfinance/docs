@@ -1,0 +1,1232 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DeepDEX Public API",
+    "description": "Public RESTful API for DeepDEX decentralized exchange platform\n\nThis API provides access to spot and perpetual trading markets, user orders, trade history, market data, and volume statistics.\n\n**Note:** This is the public API documentation. For complete API documentation including admin endpoints, see /api-docs/openapi-admin.json\n\n## API Endpoints\n\n### Spot Trading\n- **POST /api/v1/spot/pairs** - Get all trading pairs\n- **POST /api/v1/spot/pair-by-name** - Get pair by name\n- **POST /api/v1/spot/mids** - Get all mid prices\n- **POST /api/v1/spot/volume** - Get volume statistics\n- **POST /api/v1/spot/candles** - Get candlestick data\n- **POST /api/v1/spot/user/open-orders** - Get user's open orders\n- **POST /api/v1/spot/user/history-orders** - Get user's order history\n- **POST /api/v1/spot/user/fills** - Get user's fills\n- **POST /api/v1/spot/user/fills-by-time** - Get fills by time range\n- **POST /api/v1/spot/user/order** - Get specific order\n- **POST /api/v1/spot/user/order-by-tx** - Get order by transaction hash\n\n### Perpetual Trading\n- **POST /api/v1/perp/markets** - Get all markets\n- **POST /api/v1/perp/market-by-id** - Get market by ID\n- **POST /api/v1/perp/mids** - Get all mid prices\n- **POST /api/v1/perp/volume** - Get volume statistics\n- **POST /api/v1/perp/candles** - Get candlestick data\n- **POST /api/v1/perp/user/open-orders** - Get user's open orders\n- **POST /api/v1/perp/user/history-orders** - Get user's order history\n- **POST /api/v1/perp/user/fills** - Get user's fills\n- **POST /api/v1/perp/user/fills-by-time** - Get fills by time range\n- **POST /api/v1/perp/user/order** - Get specific order\n- **POST /api/v1/perp/user/order-by-tx** - Get order by transaction hash",
+    "contact": {
+      "name": "DeepDEX Team",
+      "url": "https://deepdex.io"
+    },
+    "license": {
+      "name": "MIT"
+    },
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/perp/candles": {
+      "post": {
+        "tags": [
+          "perp"
+        ],
+        "summary": "Get perpetual candlestick data",
+        "operationId": "get_perp_candle_snap_shot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpCandleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Candlestick data"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "404": {
+            "description": "Market not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/market-by-id": {
+      "post": {
+        "tags": [
+          "perp"
+        ],
+        "summary": "Get perpetual market by ID",
+        "operationId": "get_perp_market_by_id",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpMarketByIdRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Market details"
+          },
+          "404": {
+            "description": "Market not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/markets": {
+      "post": {
+        "tags": [
+          "perp"
+        ],
+        "summary": "Get all perpetual markets",
+        "operationId": "get_all_perp_markets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of all perpetual markets"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/mids": {
+      "post": {
+        "tags": [
+          "perp"
+        ],
+        "summary": "Get all perp mid prices\nGet all perp coin mid prices based on Substrate PerpOrder data",
+        "operationId": "get_all_perp_mids",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of all mid prices"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/user/fills": {
+      "post": {
+        "tags": [
+          "perp::user"
+        ],
+        "summary": "Get user's perpetual fill history",
+        "operationId": "get_user_perp_fills",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpUserFillsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of fills"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/user/fills-by-time": {
+      "post": {
+        "tags": [
+          "perp::user"
+        ],
+        "summary": "Get user's perpetual fills by time range",
+        "operationId": "get_user_perp_fills_by_time",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpUserFillsByTimeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of fills in time range"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/user/history-orders": {
+      "post": {
+        "tags": [
+          "perp::user"
+        ],
+        "summary": "Get user's perpetual order history",
+        "operationId": "get_user_perp_history_orders",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpUserOrdersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of historical orders"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/user/open-orders": {
+      "post": {
+        "tags": [
+          "perp::user"
+        ],
+        "summary": "Get user's open perpetual orders",
+        "operationId": "get_user_perp_open_orders",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpUserOrdersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of open orders"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/user/order": {
+      "post": {
+        "tags": [
+          "perp::user"
+        ],
+        "summary": "Get specific perpetual order by ID",
+        "operationId": "get_user_perp_order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Order details"
+          },
+          "404": {
+            "description": "Order not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/user/order-by-tx": {
+      "post": {
+        "tags": [
+          "perp::user"
+        ],
+        "summary": "Get perpetual order by transaction hash",
+        "operationId": "get_user_perp_order_tx_hash",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpOrderByTxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Order details"
+          },
+          "404": {
+            "description": "Order not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/volume": {
+      "post": {
+        "tags": [
+          "perp"
+        ],
+        "summary": "Get perp market volume statistics",
+        "description": "Request parameters:\n- market_id: Required, the market ID\n- period: Optional, the time period (1h, 24h, 7d, 30d), defaults to 24h\nGet perpetual trading volume statistics",
+        "operationId": "get_perp_volume",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpVolumeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Volume statistics"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "404": {
+            "description": "Market not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/candles": {
+      "post": {
+        "tags": [
+          "spot"
+        ],
+        "summary": "Get spot candlestick data",
+        "operationId": "get_spot_candle_snap_shot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotCandleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Candlestick data"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "404": {
+            "description": "Pair not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/mids": {
+      "post": {
+        "tags": [
+          "spot"
+        ],
+        "summary": "Get all spot mid prices\nGet all spot coin mid prices",
+        "operationId": "get_all_spot_mids",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of all mid prices"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/pair-by-name": {
+      "post": {
+        "tags": [
+          "spot"
+        ],
+        "summary": "Get spot trading pair by name",
+        "operationId": "get_spot_pair_by_name",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotPairByNameRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Trading pair details"
+          },
+          "404": {
+            "description": "Pair not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/pairs": {
+      "post": {
+        "tags": [
+          "spot"
+        ],
+        "summary": "Get all spot trading pairs",
+        "operationId": "get_all_spot_pairs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of all spot trading pairs"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/user/fills": {
+      "post": {
+        "tags": [
+          "spot::user"
+        ],
+        "summary": "Get user's spot fill history",
+        "operationId": "get_user_spot_fills",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotUserFillsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of fills"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/user/fills-by-time": {
+      "post": {
+        "tags": [
+          "spot::user"
+        ],
+        "summary": "Get user's spot fills by time range",
+        "operationId": "get_user_spot_fills_by_time",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotUserFillsByTimeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of fills in time range"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/user/history-orders": {
+      "post": {
+        "tags": [
+          "spot::user"
+        ],
+        "summary": "Get user's spot order history",
+        "operationId": "get_user_spot_history_orders",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotUserOrdersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of historical orders"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/user/open-orders": {
+      "post": {
+        "tags": [
+          "spot::user"
+        ],
+        "summary": "Get user's open spot orders",
+        "operationId": "get_user_spot_open_orders",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotUserOrdersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "List of open orders"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/user/order": {
+      "post": {
+        "tags": [
+          "spot::user"
+        ],
+        "summary": "Get specific spot order by ID",
+        "operationId": "get_user_spot_order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Order details"
+          },
+          "404": {
+            "description": "Order not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/user/order-by-tx": {
+      "post": {
+        "tags": [
+          "spot::user"
+        ],
+        "summary": "Get spot order by transaction hash",
+        "operationId": "get_user_spot_order_by_tx_hash",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotOrderByTxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Order details"
+          },
+          "404": {
+            "description": "Order not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/spot/volume": {
+      "post": {
+        "tags": [
+          "spot"
+        ],
+        "summary": "Get spot pair volume statistics",
+        "description": "Request parameters:\n- pair: Required, the pair name (e.g., \"BTC-USDT\")\n- period: Optional, the time period (1h, 24h, 7d, 30d), defaults to 24h\nGet spot trading volume statistics",
+        "operationId": "get_spot_volume",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotVolumeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Volume statistics"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "404": {
+            "description": "Pair not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EmptyRequest": {
+        "type": "object",
+        "description": "Empty request (for endpoints that don't need parameters)"
+      },
+      "PerpCandleRequest": {
+        "type": "object",
+        "description": "Request for perp candle snapshot",
+        "required": [
+          "dex",
+          "candleInterval"
+        ],
+        "properties": {
+          "candleInterval": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Candle interval: 0:hour, 1:day, 2:month, 3:minute, 4:15minutes",
+            "example": 0,
+            "maximum": 4,
+            "minimum": 0
+          },
+          "dex": {
+            "type": "string",
+            "description": "Market name (e.g., \"BTC-USDT\")",
+            "example": "BTC-USDT"
+          },
+          "end": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "End time for the query (milliseconds timestamp)"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of records to return (1-5000)",
+            "example": 500,
+            "maximum": 5000,
+            "minimum": 1
+          },
+          "start": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Start time for the query (milliseconds timestamp)"
+          }
+        }
+      },
+      "PerpMarketByIdRequest": {
+        "type": "object",
+        "description": "Request for getting a specific perp market by ID",
+        "required": [
+          "marketId"
+        ],
+        "properties": {
+          "marketId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Market ID",
+            "example": 1,
+            "minimum": 0
+          }
+        }
+      },
+      "PerpOrderByTxRequest": {
+        "type": "object",
+        "description": "Request for perp order by transaction hash",
+        "required": [
+          "txHash"
+        ],
+        "properties": {
+          "txHash": {
+            "type": "string",
+            "description": "Transaction hash",
+            "example": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+          }
+        }
+      },
+      "PerpOrderRequest": {
+        "type": "object",
+        "description": "Request for perp order by ID",
+        "required": [
+          "user",
+          "marketId",
+          "oid"
+        ],
+        "properties": {
+          "marketId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Market ID",
+            "example": 1,
+            "minimum": 0
+          },
+          "oid": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Order ID",
+            "example": 12345,
+            "minimum": 0
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          }
+        }
+      },
+      "PerpUserFillsByTimeRequest": {
+        "type": "object",
+        "description": "Request for perp user fills by time",
+        "required": [
+          "user",
+          "marketId"
+        ],
+        "properties": {
+          "end": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "End time for the query (milliseconds timestamp)"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of records to return (1-1000)",
+            "example": 100,
+            "maximum": 1000,
+            "minimum": 1
+          },
+          "marketId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Market ID",
+            "example": 1,
+            "minimum": 0
+          },
+          "start": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Start time for the query (milliseconds timestamp)"
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          }
+        }
+      },
+      "PerpUserFillsRequest": {
+        "type": "object",
+        "description": "Request for perp user fills",
+        "required": [
+          "user",
+          "marketId"
+        ],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of records to return (1-1000)",
+            "example": 100,
+            "maximum": 1000,
+            "minimum": 1
+          },
+          "marketId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Market ID",
+            "example": 1,
+            "minimum": 0
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          }
+        }
+      },
+      "PerpUserOrdersRequest": {
+        "type": "object",
+        "description": "Request for perp user orders (open or historical)",
+        "required": [
+          "user",
+          "marketId"
+        ],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of records to return (1-1000)",
+            "example": 100,
+            "maximum": 1000,
+            "minimum": 1
+          },
+          "marketId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Market ID",
+            "example": 1,
+            "minimum": 0
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          }
+        }
+      },
+      "PerpVolumeRequest": {
+        "type": "object",
+        "description": "Request for perp volume statistics",
+        "required": [
+          "marketId"
+        ],
+        "properties": {
+          "marketId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Market ID",
+            "example": 1,
+            "minimum": 0
+          },
+          "period": {
+            "type": "string",
+            "description": "Time period: 1h, 24h, 7d, or 30d",
+            "example": "24h"
+          }
+        }
+      },
+      "SpotCandleRequest": {
+        "type": "object",
+        "description": "Request for spot candle snapshot",
+        "required": [
+          "dex",
+          "candleInterval"
+        ],
+        "properties": {
+          "candleInterval": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Candle interval: 0:hour, 1:day, 2:month, 3:minute, 4:15minutes",
+            "example": 0,
+            "maximum": 4,
+            "minimum": 0
+          },
+          "dex": {
+            "type": "string",
+            "description": "Trading pair name (e.g., \"SOL/USDT\")",
+            "example": "SOL/USDT"
+          },
+          "end": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "End time for the query (milliseconds timestamp)"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of records to return (1-5000)",
+            "example": 500,
+            "maximum": 5000,
+            "minimum": 1
+          },
+          "start": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Start time for the query (milliseconds timestamp)"
+          }
+        }
+      },
+      "SpotOrderByTxRequest": {
+        "type": "object",
+        "description": "Request for spot order by transaction hash",
+        "required": [
+          "txHash"
+        ],
+        "properties": {
+          "txHash": {
+            "type": "string",
+            "description": "Transaction hash",
+            "example": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+          }
+        }
+      },
+      "SpotOrderRequest": {
+        "type": "object",
+        "description": "Request for spot order by ID",
+        "required": [
+          "user",
+          "dex",
+          "oid"
+        ],
+        "properties": {
+          "dex": {
+            "type": "string",
+            "description": "Trading pair name (e.g., \"SOL/USDT\")",
+            "example": "SOL/USDT"
+          },
+          "oid": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Order ID",
+            "example": 12345,
+            "minimum": 0
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          }
+        }
+      },
+      "SpotOrderType": {
+        "type": "string",
+        "enum": [
+          "Sell",
+          "Buy"
+        ]
+      },
+      "SpotPairByNameRequest": {
+        "type": "object",
+        "description": "Request for getting a specific spot pair by name",
+        "required": [
+          "pairName"
+        ],
+        "properties": {
+          "pairName": {
+            "type": "string",
+            "description": "Trading pair name (e.g., \"SOL/USDT\")",
+            "example": "SOL/USDT"
+          }
+        }
+      },
+      "SpotUserFillsByTimeRequest": {
+        "type": "object",
+        "description": "Request for spot user fills by time",
+        "required": [
+          "user",
+          "dex"
+        ],
+        "properties": {
+          "dex": {
+            "type": "string",
+            "description": "Trading pair name (e.g., \"SOL/USDT\")",
+            "example": "SOL/USDT"
+          },
+          "end": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "End time for the query (milliseconds timestamp)"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of records to return (1-1000)",
+            "example": 100,
+            "maximum": 1000,
+            "minimum": 1
+          },
+          "start": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Start time for the query (milliseconds timestamp)"
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          }
+        }
+      },
+      "SpotUserFillsRequest": {
+        "type": "object",
+        "description": "Request for spot user fills",
+        "required": [
+          "user",
+          "dex"
+        ],
+        "properties": {
+          "dex": {
+            "type": "string",
+            "description": "Trading pair name (e.g., \"SOL/USDT\")",
+            "example": "SOL/USDT"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of records to return (1-1000)",
+            "example": 100,
+            "maximum": 1000,
+            "minimum": 1
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          }
+        }
+      },
+      "SpotUserOrdersRequest": {
+        "type": "object",
+        "description": "Request for spot user orders (open or historical)",
+        "required": [
+          "user",
+          "dex"
+        ],
+        "properties": {
+          "dex": {
+            "type": "string",
+            "description": "Trading pair name (e.g., \"SOL/USDT\")",
+            "example": "SOL/USDT"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Maximum number of records to return (1-1000)",
+            "example": 100,
+            "maximum": 1000,
+            "minimum": 1
+          },
+          "orderType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpotOrderType",
+                "description": "Filter by order type (Buy/Sell)"
+              }
+            ]
+          },
+          "user": {
+            "type": "string",
+            "description": "User wallet address",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+          }
+        }
+      },
+      "SpotVolumeRequest": {
+        "type": "object",
+        "description": "Request for spot volume statistics",
+        "required": [
+          "pair"
+        ],
+        "properties": {
+          "pair": {
+            "type": "string",
+            "description": "Trading pair name",
+            "example": "SOL/USDT"
+          },
+          "period": {
+            "type": "string",
+            "description": "Time period: 1h, 24h, 7d, or 30d",
+            "example": "24h"
+          }
+        }
+      },
+      "VolumeStatistics": {
+        "type": "object",
+        "description": "Volume statistics data structure",
+        "required": [
+          "totalVolume",
+          "tradeCount",
+          "startTime",
+          "endTime",
+          "statisticTime"
+        ],
+        "properties": {
+          "endTime": {
+            "type": "integer",
+            "format": "int64",
+            "description": "End time (milliseconds timestamp)"
+          },
+          "startTime": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Start time (milliseconds timestamp)"
+          },
+          "statisticTime": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Statistics time (milliseconds timestamp)"
+          },
+          "totalVolume": {
+            "type": "string",
+            "description": "Total trading volume"
+          },
+          "tradeCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of trades"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "spot",
+      "description": "Spot trading market endpoints"
+    },
+    {
+      "name": "spot::pairs",
+      "description": "Spot trading pair information"
+    },
+    {
+      "name": "spot::user",
+      "description": "Spot user orders and fills"
+    },
+    {
+      "name": "spot::market-data",
+      "description": "Spot market data (candles, volume)"
+    },
+    {
+      "name": "perp",
+      "description": "Perpetual futures market endpoints"
+    },
+    {
+      "name": "perp::markets",
+      "description": "Perpetual market information"
+    },
+    {
+      "name": "perp::user",
+      "description": "Perpetual user orders and fills"
+    },
+    {
+      "name": "perp::market-data",
+      "description": "Perpetual market data (candles, volume)"
+    }
+  ]
+}
