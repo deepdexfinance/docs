@@ -1,0 +1,20 @@
+---
+title: Insurance
+---
+
+What is the Insurance Fund?
+The Insurance Fund serves as the protocol's first line of defense to maintain solvency in the event of account bankruptcies.
+
+Why is it necessary?
+During periods of extreme volatility, accounts with insufficient margin may not be liquidated in time, resulting in negative balances (bad debt). The Insurance Fund absorbs these losses to keep the protocol solvent and ensure that profitable traders can be paid out.
+
+How is it funded?
+Insurance Funds are replenished through fees collected from liquidations, trading, and borrowing. Each fund operates as a separate pool:
+
+- **Perpetual markets**: Funded and settled in USDC; used to cover bankruptcies specific to each perp market.
+
+- **Spot markets**: Funded in USDC; used to cover USDC-denominated losses from the borrow market.
+
+- **Borrow markets**: Funded in the borrowed asset; used to cover bankruptcies for that specific asset.
+
+Losses exceeding the insurance fund limits are handled through the protocol's socialized loss mechanism.
