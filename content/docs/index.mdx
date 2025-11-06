@@ -2,4 +2,35 @@
 title: Introduction
 ---
 
-SafeLiqiud is a decentralized exchange for spot and perpetuals trading. Our mission is to provide users with secure, transparent, and efficient ways to manage their digital assets and participate in the growing DeFi ecosystem.
+DeepDEX is a high-performance, decentralized lending and trading platform for crypto spot, perpetual contracts, built on a self-developed blockchain designed for trading.  
+Built in Rust, DeepDEX runs both Rust and EVM virtual machines, delivering ~200,000 on-chain TPS.  
+  
+## Features
+### Consensus Mechanism 
+DeepDEX uses the DeepBFT consensus mechanism (a HotStuff variant), providing the core engine for high-performance trading.
+ 
+### Single-Chain (Rust) + Dual Virtual Machines  (Rust + EVM)
+An efficient single-chain, dual-VM design.
+Rust VM powers high-concurrency transactions, while EVM supports account systems, token protocol, and other applications.  
+  
+### Low Latency Trading  
+With a maximum block time of just 0.2 seconds, DeepDEX provides users with an ultra-fast and seamless trading experience.  
+  
+### Performant financial primitives  
+DeepDEX comes with foundational modules built natively into the chain. This includes on-chain spot and perp order books, lending, oracles, etc.  
+  
+## Innovations
+### Trustless Asset Management
+Assets on DeepDEX is safely managed by DeepSafe, a decentralized and robust verification network.
+
+### Portfolio Margin  
+All positions share margin, maximizing capital efficiency.  
+  
+### Multi-Asset Cross Margin System  
+Use assets like BTC, ETH, SOL, and stablecoins as margin.
+
+### Lending/Borrowing  
+A decentralized lending feature and a settlement system are integrated into DeepDEX. Deposited assets can be used as margin in trading and automatically earn interest. Users can also borrow and withdraw other native assets.  
+
+### EVM-Compatible Account System
+Designed to bring convenience for users, leveraging the largest user base in the industry.
