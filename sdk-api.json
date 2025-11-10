@@ -12,6 +12,11 @@
     },
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "https://pub-api.deepdex.finance"
+    }
+  ],
   "paths": {
     "/api/v1/chain/broadcast": {
       "post": {
