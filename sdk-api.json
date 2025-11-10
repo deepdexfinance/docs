@@ -5,13 +5,18 @@
     "description": "Public RESTful API for DeepDEX decentralized exchange platform\n\nThis API provides access to spot and perpetual trading markets, user orders, trade history, market data, and volume statistics.\n\n**Note:** This is the public API documentation. For complete API documentation including admin endpoints, see /api-docs/openapi-admin.json\n\n## API Endpoints\n\n### Spot Trading\n- **POST /api/v1/spot/pairs** - Get all trading pairs\n- **POST /api/v1/spot/pair-by-name** - Get pair by name\n- **POST /api/v1/spot/mids** - Get all mid prices\n- **POST /api/v1/spot/volume** - Get volume statistics\n- **POST /api/v1/spot/candles** - Get candlestick data\n- **POST /api/v1/spot/user/open-orders** - Get user's open orders\n- **POST /api/v1/spot/user/history-orders** - Get user's order history\n- **POST /api/v1/spot/user/fills** - Get user's fills\n- **POST /api/v1/spot/user/fills-by-time** - Get fills by time range\n- **POST /api/v1/spot/user/order** - Get specific order\n- **POST /api/v1/spot/user/order-by-tx** - Get order by transaction hash\n\n### Perpetual Trading\n- **POST /api/v1/perp/markets** - Get all markets\n- **POST /api/v1/perp/market-by-id** - Get market by ID\n- **POST /api/v1/perp/mids** - Get all mid prices\n- **POST /api/v1/perp/volume** - Get volume statistics\n- **POST /api/v1/perp/candles** - Get candlestick data\n- **POST /api/v1/perp/user/open-orders** - Get user's open orders\n- **POST /api/v1/perp/user/history-orders** - Get user's order history\n- **POST /api/v1/perp/user/fills** - Get user's fills\n- **POST /api/v1/perp/user/fills-by-time** - Get fills by time range\n- **POST /api/v1/perp/user/order** - Get specific order\n- **POST /api/v1/perp/user/order-by-tx** - Get order by transaction hash",
     "contact": {
       "name": "DeepDEX Team",
-      "url": "https://pub-api.deepdex.finance"
+      "url": ""
     },
     "license": {
       "name": "MIT"
     },
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "https://pub-api.deepdex.finance"
+    }
+  ],
   "paths": {
     "/api/v1/chain/broadcast": {
       "post": {
@@ -975,6 +980,111 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/perp/open-interest": {
+      "post": {
+        "tags": [
+          "perp"
+        ],
+        "summary": "Get perpetual market open interest statistics",
+        "operationId": "get_perp_open_interest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerpMarketByIdRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Open interest statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Open Interest statistics",
+                      "required": [
+                        "long_oi",
+                        "short_oi",
+                        "total_oi",
+                        "long_short_ratio",
+                        "long_position_count",
+                        "short_position_count",
+                        "statistic_time"
+                      ],
+                      "properties": {
+                        "long_oi": {
+                          "type": "string",
+                          "description": "Long open interest value",
+                          "example": "70655.557259960160497460"
+                        },
+                        "long_position_count": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Number of long positions",
+                          "example": 12
+                        },
+                        "long_short_ratio": {
+                          "type": "string",
+                          "description": "Long/Short ratio",
+                          "example": "-1"
+                        },
+                        "short_oi": {
+                          "type": "string",
+                          "description": "Short open interest value",
+                          "example": "0"
+                        },
+                        "short_position_count": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Number of short positions",
+                          "example": 0
+                        },
+                        "statistic_time": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Statistics timestamp (milliseconds)",
+                          "example": 1762308694127
+                        },
+                        "total_oi": {
+                          "type": "string",
+                          "description": "Total open interest value",
+                          "example": "70655.557259960160497460"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Market not found or no data available"
           },
           "500": {
             "description": "Internal server error"
@@ -3341,6 +3451,59 @@
           }
         }
       },
+      "OpenInterestStatistics": {
+        "type": "object",
+        "description": "Open Interest statistics",
+        "required": [
+          "long_oi",
+          "short_oi",
+          "total_oi",
+          "long_short_ratio",
+          "long_position_count",
+          "short_position_count",
+          "statistic_time"
+        ],
+        "properties": {
+          "long_oi": {
+            "type": "string",
+            "description": "Long open interest value",
+            "example": "70655.557259960160497460"
+          },
+          "long_position_count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of long positions",
+            "example": 12
+          },
+          "long_short_ratio": {
+            "type": "string",
+            "description": "Long/Short ratio",
+            "example": "-1"
+          },
+          "short_oi": {
+            "type": "string",
+            "description": "Short open interest value",
+            "example": "0"
+          },
+          "short_position_count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of short positions",
+            "example": 0
+          },
+          "statistic_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Statistics timestamp (milliseconds)",
+            "example": 1762308694127
+          },
+          "total_oi": {
+            "type": "string",
+            "description": "Total open interest value",
+            "example": "70655.557259960160497460"
+          }
+        }
+      },
       "PerpCandleRequest": {
         "type": "object",
         "description": "Request for perp candle snapshot",
@@ -3393,10 +3556,10 @@
         "type": "object",
         "description": "Request for getting a specific perp market by ID",
         "required": [
-          "marketId"
+          "market_id"
         ],
         "properties": {
-          "marketId": {
+          "market_id": {
             "type": "integer",
             "format": "int32",
             "description": "Market ID",
@@ -3409,10 +3572,10 @@
         "type": "object",
         "description": "Request for perp order by transaction hash",
         "required": [
-          "txHash"
+          "tx_hash"
         ],
         "properties": {
-          "txHash": {
+          "tx_hash": {
             "type": "string",
             "description": "Transaction hash",
             "example": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
@@ -3558,10 +3721,10 @@
         "type": "object",
         "description": "Request for perp volume statistics",
         "required": [
-          "marketId"
+          "market_id"
         ],
         "properties": {
-          "marketId": {
+          "market_id": {
             "type": "integer",
             "format": "int32",
             "description": "Market ID",
@@ -3625,10 +3788,10 @@
         "type": "object",
         "description": "Request for spot order by transaction hash",
         "required": [
-          "txHash"
+          "tx_hash"
         ],
         "properties": {
-          "txHash": {
+          "tx_hash": {
             "type": "string",
             "description": "Transaction hash",
             "example": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
