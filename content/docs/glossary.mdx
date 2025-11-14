@@ -4,8 +4,8 @@ title: Glossary
 
 ## Core Concepts
 
-#### Index/Oracle Price
-The current price of an asset. It is sourced from external data providers (Currently Pyth) and is used to determine liquidations.
+#### Index Price
+The Index Price is a price feed that reflects the fair spot market value of the asset. It is derived from a combination of prices from external data sources (currently using Pyth oracle) to provide a reliable and tamper-resistant reference for various calculations, including funding rates, mark prices, and risk management.
 
 #### Initial Asset Value (IAV)
 The initial-level, risk-weighted value of an asset held in an account. It measures how much of the asset's market value can be counted as initial collateral for opening new positions or borrowing after applying the [Initial Asset Weight (IAW)](/glossary#initial-asset-weight-iaw). For asset $$i$$,
@@ -43,7 +43,7 @@ A Maker is a trader who places a limit order that is not immediately filled.
 The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
 
 #### Mark Price
-Mark Price, derived from a combination of the oracle price and market data, is the reference price to determine the fair, real-time value of positions and collateral for margining, risk checks, and liquidation calculations.
+Mark Price, derived from a combination of the Index Price and market data, is the reference price to determine the fair, real-time value of positions and collateral for margining, risk checks, and liquidation calculations.
 
 #### Maintenance Asset Value (MAV)
 The maintenance-level, risk-weighted value of an asset held in an account. It measures how much of the asset's market value can be counted toward the account's maintenance margin after applying the [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $$i$$,
@@ -129,4 +129,4 @@ The minimum amount of margin required to keep a perpetual position open.
 The minimum percentage of the perpetual position value that must be maintained as collateral to keep the position open. Falling below this ratio can trigger liquidation.
 
 #### Unrealized Profit and Loss (Unrealized PnL)
-The Unrealized PnL of a perpetual position represents the current gain or loss of an open position based on the Oracle Price, before the position is closed or settled.
+The Unrealized PnL of a perpetual position represents the current gain or loss of an open position based on the Index Price, before the position is closed or settled.

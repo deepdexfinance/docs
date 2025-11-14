@@ -17,7 +17,7 @@ Steps:
 1. All open orders are canceled. 
 2. Liquidators can then iteratively liquidate portions of the account's assets and liabilities over a throttled time window. This continues until the account's collateral exceeds the Maintenance Margin Requirement plus an amount determined by the Liquidation Buffer Ratio.
 
-At the time of liquidation, the trade price for the user's perpetual position will be determined by the oracle price. A separate fee, typically set higher than the standard taker fee for the market, will be applied to the liquidated amount to provide an incentive to the liquidator.
+At the time of liquidation, the trade price for the user's perpetual position will be determined by the Index Price. A separate fee, typically set higher than the standard taker fee for the market, will be applied to the liquidated amount to provide an incentive to the liquidator.
 
 ## Running a Liquidator Bot
 
