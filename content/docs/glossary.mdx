@@ -77,6 +77,10 @@ The risk multiplier applied to each liability when assessing maintenance-level s
 #### Maintenance Margin Requirement
 The risk-weighted value of a user's borrows and perpetual positions.
 
+```math
+\text{MMReq} = \sum_i \text{MBV}_i + \sum_j \left( \text{NotionalValue}_j \times \text{MMR}_j \right)
+```
+
 #### Portfolio Margin Ratio
 The Portfolio Margin Ratio of an account measures the ratio of the account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement):
 
