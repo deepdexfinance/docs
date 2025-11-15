@@ -7,6 +7,33 @@ title: Glossary
 #### Index Price
 The Index Price is a price feed that reflects the fair spot market value of the asset. It is derived from a combination of prices from external data sources (currently using Pyth oracle) to provide a reliable and tamper-resistant reference for various calculations, including funding rates, mark prices, and risk management.
 
+#### Leverage
+The ability to trade a position larger than your initial capital.
+
+#### Liquidation
+The forced closing of a leveraged position by the protocol when the trader's margin falls below the maintenance margin level. This happens to prevent a trader's losses from exceeding their collateral.
+
+#### Maker
+A Maker is a trader who places a limit order that is not immediately filled.
+
+#### Margin
+The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
+
+#### Mark Price
+Mark Price, derived from a combination of the Index Price and market data, is the reference price to determine the fair, real-time value of positions and collateral for margining, risk checks, and liquidation calculations.
+
+#### Mid Price
+The average of the best available bid and ask prices on an order book.
+
+#### Perpetual Contract
+A type of futures contract that has no expiration date. Traders can hold a position indefinitely as long as they maintain the required margin.
+
+#### Taker
+A Taker is a trader who places an order that gets filled immediately against an existing order on the order book.
+
+
+## Portfolio Margin
+
 #### Initial Asset Value (IAV)
 The initial-level, risk-weighted value of an asset held in an account. It measures how much of the asset's market value can be counted as initial collateral for opening new positions or borrowing after applying the [Initial Asset Weight (IAW)](/glossary#initial-asset-weight-iaw). For asset $$i$$,
 
@@ -26,24 +53,6 @@ The initial-level, risk-weighted value of a borrowed asset. It quantifies the in
 
 #### Initial Borrow Weight (IBW)
 The risk multiplier applied to each borrowed asset when determining the initial liability value for opening new positions or borrowing. The range of IBW is $$\text{IBW} \ge 1$$.
-
-#### Long/Short Position
-A **long** position is a bet that the asset's price will go up, while a **short** position is a bet that it will go down.
-
-#### Leverage
-The ability to trade a position larger than your initial capital.
-
-#### Liquidation
-The forced closing of a leveraged position by the protocol when the trader's margin falls below the maintenance margin level. This happens to prevent a trader's losses from exceeding their collateral.
-
-#### Maker
-A Maker is a trader who places a limit order that is not immediately filled.
-
-#### Margin
-The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
-
-#### Mark Price
-Mark Price, derived from a combination of the Index Price and market data, is the reference price to determine the fair, real-time value of positions and collateral for margining, risk checks, and liquidation calculations.
 
 #### Maintenance Asset Value (MAV)
 The maintenance-level, risk-weighted value of an asset held in an account. It measures how much of the asset's market value can be counted toward the account's maintenance margin after applying the [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $$i$$,
@@ -68,12 +77,6 @@ The risk multiplier applied to each liability when assessing maintenance-level s
 #### Maintenance Margin Requirement
 The risk-weighted value of a user's borrows and perpetual positions.
 
-#### Mid Price
-The average of the best available bid and ask prices on an order book.
-
-#### Perpetual Contract
-A type of futures contract that has no expiration date. Traders can hold a position indefinitely as long as they maintain the required margin.
-
 #### Portfolio Margin Ratio
 The Portfolio Margin Ratio of an account measures the ratio of the account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement):
 
@@ -82,9 +85,6 @@ The Portfolio Margin Ratio of an account measures the ratio of the account's [To
 ```
 
 When Portfolio Margin Ratio falls below 1, the account is undercollateralized and subject to liquidation.
-
-#### Taker
-A Taker is a trader who places an order that gets filled immediately against an existing order on the order book.
 
 #### Total Collateral Value
 Total Collateral Value, or Total Collateral, is the sum of the aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all assets in an account, the [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl), the unsettled funding payments, and the maintenance-level value of assets associated with open spot margin orders awaiting execution.
@@ -122,11 +122,17 @@ The minimum amount of margin required to open a new perpetual position.
 #### Initial Margin Ratio (IMR)
 The percentage of a new perpetual position's value required as collateral to open the position.
 
+#### Long/Short Position
+A **long** position is a bet that the asset's price will go up, while a **short** position is a bet that it will go down.
+
 #### Maintenance Margin
 The minimum amount of margin required to keep a perpetual position open. 
 
 #### Maintenance Margin Ratio (MMR)
 The minimum percentage of the perpetual position value that must be maintained as collateral to keep the position open. Falling below this ratio can trigger liquidation.
 
+#### Notional Value
+The Notional Value of a perpetual position represents the value of the position based on the Mark Price, calculated as the position size multiplied by the Mark Price.
+
 #### Unrealized Profit and Loss (Unrealized PnL)
-The Unrealized PnL of a perpetual position represents the current gain or loss of an open position based on the Index Price, before the position is closed or settled.
+The Unrealized PnL of a perpetual position represents the current gain or loss of an open position based on the Mark Price, before the position is closed or settled.
