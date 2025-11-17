@@ -74,18 +74,18 @@ The maintenance-level, risk-weighted value of a borrowed asset, calculated using
 #### Maintenance Borrow Weight (MBW)
 The risk multiplier applied to each liability when assessing maintenance-level solvency. The range of MBW is $$\text{MBW} \le 1$$.
 
-#### Maintenance Margin Requirement
+#### Maintenance Margin Requirement (MMReq)
 The risk-weighted value of a user's borrows and perpetual positions.
 
 ```math
 \text{MMReq} = \sum_i \text{MBV}_i + \sum_j \left( \text{NotionalValue}_j \times \text{MMR}_j \right)
 ```
 
-#### Portfolio Margin Ratio
-The Portfolio Margin Ratio of an account measures the ratio of the account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement):
+#### Portfolio Margin Ratio (PMR)
+The Portfolio Margin Ratio of an account measures the ratio of the account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement-mmreq):
 
 ```math
-\text{MarginRatio} = \frac {\text{TotalCollateralValue}} {\text{MaintenanceMarginRequirement}}
+\text{PMR} = \frac {\text{TotalCollateralValue}} {\text{MaintenanceMarginRequirement}}
 ```
 
 When Portfolio Margin Ratio falls below 1, the account is undercollateralized and subject to liquidation.
