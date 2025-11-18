@@ -115,7 +115,7 @@ Utilization measures the proportion of an asset currently being borrowed compare
 ```
 
 
-## Perpetual Trading
+## Perpetual Contract Trading
 
 #### Funding Rate
 The Funding Rate is a periodic rate applied to perpetual positions to calculate the funding payment exchanged between long and short positions. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price. 
@@ -137,6 +137,13 @@ The minimum percentage of the perpetual position value that must be maintained a
 
 #### Notional Value
 The Notional Value of a perpetual position represents the value of the position based on the Mark Price, calculated as the position size multiplied by the Mark Price.
+
+#### Open Interest (OI)
+Open Interest (OI) is the number or notional value of all perpetual contracts that have been opened and have not yet been closed or settled. Because every contract requires two sides (one Long and one Short), the Long OI is mathematically identical to the Short OI:
+
+```math
+\text{OI} = \text{Long OI} = \text{Short OI}
+```
 
 #### Unrealized Profit and Loss (Unrealized PnL)
 The Unrealized PnL of a perpetual position represents the current gain or loss of an open position based on the Mark Price, before the position is closed or settled.
