@@ -75,10 +75,13 @@ The maintenance-level, risk-weighted value of a borrowed asset, calculated using
 The risk multiplier applied to each liability when assessing maintenance-level solvency. The range of MBW is $$\text{MBW} \le 1$$.
 
 #### Maintenance Margin Requirement (MMReq)
-The Maintenance Margin Requirement (MMReq), or Total Liabilities, represents an account's aggregate maintenance-level, risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, and open orders. It represents the minimum collateral an account must maintain to avoid liquidation.
+Maintenance Margin Requirement (MMReq), or Total Liabilities, represents an account's aggregate maintenance-level, risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, and open orders. It represents the minimum collateral an account must maintain to avoid liquidation.
+
+#### Initial Margin Requirement (IMReq)
+Initial Margin Requirement (IMReq), or Total Initial Liabilities, represents an account's aggregate initial-level, risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, and open orders. It is used to determine the initial collateral requirements for opening new positions or borrowing.
 
 #### Portfolio Margin Ratio (PMR)
-The Portfolio Margin Ratio of an account measures the ratio of the account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement-mmreq):
+The ratio of an account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement-mmreq):
 
 ```math
 \text{PMR} = \frac {\text{TotalCollateralValue}} {\text{MaintenanceMarginRequirement}}
@@ -89,13 +92,16 @@ When Portfolio Margin Ratio falls below 1, the account is undercollateralized an
 #### Total Collateral Value
 Total Collateral Value, or Total Collateral, is the sum of the aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all assets in an account, the [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl), the unsettled funding payments, and the maintenance-level value of assets associated with open spot orders awaiting execution.
 
+#### Total Initial Collateral Value
+Total Initial Collateral Value, or Total Initial Collateral, is the aggregate [Initial Asset Value (IAV)](/glossary#initial-asset-value-iav) for all assets in an account and the initial-level value of assets associated with open spot orders awaiting execution. It is used to determine how much collateral is available for opening new positions or borrowing.
+
 ## Lending and Borrowing
 
 #### Reserve Factor
 A parameter that determines what percentage of the interest paid by borrowers is allocated to the protocol. This portion of the interest helps fund the protocol's security and growth.
 
-#### Utilization or Utilization Rate
-Utilization measures the proportion of an asset currently being borrowed compared to the total supplied amount.
+#### Utilization
+Utilization, or Utilization Rate, measures the proportion of an asset currently being borrowed compared to the total supplied amount.
 
 ```math
 \text{Utilization Rate} = \frac{\text{Total Borrowed}}{\text{Total Supplied}}
@@ -105,7 +111,7 @@ Utilization measures the proportion of an asset currently being borrowed compare
 ## Perpetual Contract Trading
 
 #### Funding Rate
-The Funding Rate is a periodic rate applied to perpetual positions to calculate the funding payment exchanged between long and short positions. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price. 
+Funding Rate is a periodic rate applied to perpetual positions to calculate the funding payment exchanged between long and short positions. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price. 
 
 #### Initial Margin
 The minimum amount of margin required to open a new perpetual position.
