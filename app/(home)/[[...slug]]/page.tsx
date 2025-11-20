@@ -9,6 +9,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { getMDXComponents } from '@/mdx-components';
+import { LLMCopyButton, ViewOptions } from '@/components/page-actions';
 
 export default async function Page(props: PageProps<'/[[...slug]]'>) {
   const params = await props.params;
@@ -16,12 +17,21 @@ export default async function Page(props: PageProps<'/[[...slug]]'>) {
   if (!page) notFound();
 
   const MDXContent = page.data.body;
+  const markdownUrl = page.url.endsWith('/') ? `${page.url}index.mdx` : `${page.url}.mdx`;
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
+        <div className="flex flex-row gap-2 items-center border-b pt-2 pb-6">
+          <LLMCopyButton markdownUrl={markdownUrl} />
+          <ViewOptions
+            markdownUrl={markdownUrl}
+            githubUrl={`https://github.com/deepdexfinance/docs/blob/main/content/docs/${page.path}`}
+          />
+        </div>
+
         <MDXContent
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
