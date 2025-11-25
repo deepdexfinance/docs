@@ -1,15 +1,11 @@
 ---
 title: Funding Rates
-description: Understanding how the funding rate is calculated and applied in DeepDEX.
 ---
 
-## Overview
 Funding Rate is a periodic rate applied to perpetual positions to calculate the funding payment exchanged between long and short positions. This mechanism ensures that the price of the perpetual contract stays close to the underlying asset's index price.
 
 - **Positive Funding Rate**: Longs pay shorts. This occurs when the perpetual contract price is higher than the index price.
 - **Negative Funding Rate**: Shorts pay longs. This occurs when the perpetual contract price is lower than the index price.
-
-Funding payments are peer-to-peer; the exchange does not collect fees from these payments.
 
 ## Funding Rate Calculation
 
@@ -44,7 +40,9 @@ The funding rate is calculated by taking the 8-hour base interest rate and addin
 
 The **clamp function** restricts a value to a specific range. If the input value is below the minimum, it returns the minimum; if above the maximum, it returns the maximum; otherwise, it returns the input value unchanged. This ensures the funding rate is equal to the base interest rate when the difference between the base interest rate and the average premium index is within the clamp range [-0.05%, 0.05%].
 
-*Note: The funding rate formula applies to an 8-hour period. However, funding payments occur every hour at one-eighth of the computed 8-hour rate.*
+<Callout>
+The funding rate formula applies to an 8-hour period. However, funding payments occur every hour at one-eighth of the computed 8-hour rate.
+</Callout>
 
 ## Funding Interval and Payment
 
