@@ -13,7 +13,7 @@ Funding payments are peer-to-peer; the exchange does not collect fees from these
 
 ## Funding Rate Calculation
 
-The funding rate is calculated based on the **Premium Index** and a fixed **Base Interest Rate**. The Base Interest Rate is set to **0.01% per 8 hours**.
+The funding rate is calculated based on the **Premium Index** and a fixed **Base Interest Rate**. The Base Interest Rate (I) is set to **0.01% per 8 hours**.
 
 ### Premium Index
 
@@ -28,34 +28,30 @@ where:
 - **Impact Ask Price**: The average fill price to execute the impact margin notional on the ask side.
 - **Index Price**: The index price of the underlying asset.
 
+### Average Premium Index
+
+The premium index is sampled periodically (currently every 5 seconds). The Average Premium Index (P) is the average of the premium index over the funding interval (currently every hour).
+
 ### Funding Rate Formula
 
 The funding rate is calculated by taking the 8-hour base interest rate and adding a clamped premium component.
 
 ```math
-\text{FundingRate} = \text{AveragePremiumIndex} + \text{clamp}(\text{BaseInterestRate} - \text{AveragePremiumIndex}, -0.05\%, 0.05\%)
+\text{FundingRate} = \text{P} + \text{clamp}(\text{I} - \text{P}, -0.05\%, 0.05\%)
 ```
 
 The **clamp function** restricts a value to a specific range. If the input value is below the minimum, it returns the minimum; if above the maximum, it returns the maximum; otherwise, it returns the input value unchanged. This ensures the funding rate is equal to the base interest rate when the difference between the base interest rate and the average premium index is within the clamp range [-0.05%, 0.05%].
 
-*Note: The premium index is sampled periodically (currently every 5 seconds) and averaged over the funding interval.*
+*Note: The funding rate formula applies to an 8-hour period. However, funding payments occur every hour at one-eighth of the computed 8-hour rate.*
 
 ## Funding Interval and Payment
 
 Funding payments are exchanged every hour.
 
-> [!NOTE]
-> While the Base Interest Rate component is calculated based on an 8-hour interval (0.01%), funding payments occur every hour.
-
-The amount paid or received is calculated as:
+The amount paid or received is calculated as the product of the [Notional Value](/glossary#notional-value) and the funding rate.
 
 ```math
 \text{FundingAmount} = \text{NotionalValue} \times \text{FundingRate}
-```
-
-where:
-```math
-\text{NotionalValue} = \text{PositionSize} \times \text{IndexPrice}
 ```
 
 ## Example
