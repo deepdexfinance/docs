@@ -24,9 +24,11 @@ The premium index reflects the price difference between the perpetual contract a
 ```
 
 where:
-- **Impact Bid Price**: The average fill price to execute the impact margin notional on the bid side.
-- **Impact Ask Price**: The average fill price to execute the impact margin notional on the ask side.
+- **Impact Bid Price**: The average execution price to trade the Impact Notional Value on the bid side of the order book.
+- **Impact Ask Price**: The average execution price to trade the Impact Notional Value on the ask side of the order book.
 - **Index Price**: The index price of the underlying asset.
+
+**Impact Notional Value** is calculated as $100 / [Initial Margin Ratio](/glossary#initial-margin-ratio-imr) for each market. It determines the size of the hypothetical trade used to calculate impact prices, helping measure how the perpetual contract price deviates from the index price under realistic trading conditions. 
 
 ### Average Premium Index
 
