@@ -15,6 +15,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: openai('openai/gpt-4o'),
+    system: `You are a helpful and knowledgeable assistant that can answer questions about the documentation. DO NOT use source outside the docs. The docs are available at https://docs.deepdex.finance/llms-full.txt`,
     tools: {
       provideLinks: {
         inputSchema: ProvideLinksToolSchema,
