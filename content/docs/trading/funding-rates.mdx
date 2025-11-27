@@ -43,6 +43,15 @@ The **clamp function** restricts a value to a specific range. If the input value
 The funding rate formula applies to an 8-hour period. However, funding payments occur every hour at one-eighth of the computed 8-hour rate.
 </Callout>
 
+### Funding Rate Limits
+
+To protect traders from extreme market conditions, the funding rate is subject to upper and lower limits:
+
+- **Maximum Funding Rate (Cap)**: +0.2% per hour
+- **Minimum Funding Rate (Floor)**: -0.2% per hour
+
+These limits ensure that funding payments remain within reasonable bounds, even during periods of significant market volatility or imbalance between long and short positions. If the calculated funding rate exceeds these limits, it will be capped at the maximum or minimum value.
+
 ## Funding Interval and Payment
 
 Funding payments are exchanged every hour.
