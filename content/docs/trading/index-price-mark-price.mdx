@@ -1,0 +1,90 @@
+---
+title: Index Price and Mark Price
+---
+
+## Index Price
+
+The Index Price is a price feed that reflects the fair spot market value of the asset. It is derived from a combination of prices from external data sources (currently using Pyth oracle, but plans to use multiple data sources) to provide a reliable and tamper-resistant reference for various calculations, including funding rates, mark prices, and risk management.
+
+Index price is updated approximately every 3 seconds.
+
+## Mark Price
+
+Mark Price, derived from a combination of the Index Price and market data, is the reference price to determine the fair, real-time value of perpetual positions and collateral for margining, risk checks, and liquidation calculations.
+
+Mark price is the median of Price 1, Price 2, and Price 3.
+
+- **Price 1**: The Index Price adjusted for the last [Funding Rate](/glossary#funding-rate). 
+```math
+\text{Price1} = \text{IndexPrice} \times ( 1 + \text{LastFundingRate} * \frac{\text{TimeUntilNextFunding}} {\text{FundingPeriod}} )
+```
+
+- **Price 2**: 30 second moving average of the mid price (the average of the best bid and ask prices).
+
+- **Price 3**: Median-filtered volume-weighted average of the mid prices from Binance, Gate, OKX, Bybit, and MEXC perpetual contracts.
+
+### Price 3 Calculation
+
+#### Phase 1: Determine the raw median price
+
+```math
+\tilde{P} = \text{Median}(P_1, P_2, \dots, P_N)
+```
+
+#### Phase 2: Calculate the outlier filter
+
+```math
+x_i = 
+\begin{cases} 
+1 & \text{if } |P_i - \tilde{P}| \le \epsilon \cdot \tilde{P} \\
+0 & \text{otherwise}
+\end{cases}
+```
+
+Here, $$x_i$$ is the outlier filter for the $$i$$-th price, and $$\epsilon$$ (e.g., 1%) is a constant threshold for outlier detection.
+
+<Callout>
+If $$x_i = 0$$, the price $$P_i$$ is considered an outlier and is removed from the list.
+</Callout>
+
+#### Phase 3: Weight Capping and Normalization
+
+##### 1. Calculate total valid volume ($$V_{\text{t}}$$)
+
+```math
+V_{\text{t}} = \sum_{i=1}^{N} (x_i \cdot V_i)
+```
+
+Here, $$V_i$$ is the trading volume of the perpetual market on the $$i$$-th exchange from the most recent 12-hour window (00:00-12:00 or 12:00-24:00 UTC).
+
+##### 2. Calculate the effective volumes ($$V'_i$$)
+
+```math
+V'_i = x_i \cdot \min(V_i, \space c \cdot V_{\text{t}})
+```
+
+where $$c$$ is a constant (e.g., 60%) that limits the maximum weight of any individual price source.
+
+##### 3. Calculate the total effective volume ($$V'_{\text{t}}$$)
+
+```math
+V'_{\text{t}} = \sum_{i=1}^{N} V'_i
+```
+
+##### 4. Calculate the normalized weights ($$w_i$$)
+
+```math
+w_i = \frac{V'_i}{V'_{\text{t}}}
+```
+
+#### Phase 4: Calculate the final Price 3
+
+```math
+\text{Price3} = \sum_{i=1}^{N} (w_i \cdot P_i)
+```
+
+<Callout>
+If one of the prices is unavailable, the 180 second moving average of the mid price is used.
+</Callout>
+
+Mark price is updated approximately every 3 seconds.

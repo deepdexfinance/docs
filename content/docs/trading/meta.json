@@ -3,6 +3,7 @@
   "title": "Trading",
   "pages": [
     "market-specs",
+    "index-price-mark-price",
     "perpetuals-trading",
     "funding-rates",
     "trading-fees",
