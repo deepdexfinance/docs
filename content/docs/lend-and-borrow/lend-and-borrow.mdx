@@ -8,17 +8,17 @@ DeepDEX offers lending and borrowing features as part of its decentralized excha
 
 ## How Lending Works
 
-When users deposit assets into the protocol, they automatically become part of the lending pools and begin to earn yield. This yield is generated from the interest paid by borrowers. The  interest rates (Supply APR) are dynamic and fluctuate based on the supply and demand of each specific asset, dertemined by the utilization ratio which is calculated as `Total Borrowed / Total Deposits`. Yield is paid out periodically and compounds automatically.
+When users deposit assets into the protocol, they automatically become part of the lending pools and begin to earn yield. The yield is generated from the interest paid by borrowers. The interest rates (Supply APR) are dynamic and fluctuate based on the supply and demand of each specific asset, determined by the utilization ratio which is calculated as `Total Borrowed / Total Deposits`. Yield is paid out periodically and compounds automatically.
 
 Every asset within the protocol is subject to a Supply Cap, which represents the maximum aggregate amount that all users are permitted to deposit. This cap is particularly crucial for less liquid or more volatile assets. By setting this limit, DeepDEX effectively reduces concentration risk and prevents a sudden surge in deposits and withdrawals from depleting the pool's assets.
 
 ## How Borrowing Works
 
-To borrow assets, users must first deposit other assets to serve as collateral. The amount users are allowed to borrow is determined by the **Initial Asset Weight (IAW)** of the deposited asset and the **Initial Borrow Weight (IBW)** of the borrowed asset, where IAW is lower or equal than 100% and IBW is higher than or equal to 100%. 
+To borrow assets, users must first deposit other assets to serve as collateral. The amount users are allowed to borrow is determined by the **Initial Asset Weight (IAW)** of the deposited asset and the **Initial Borrow Weight (IBW)** of the borrowed asset, where IAW is less than or equal to 100% and IBW is greater than or equal to 100%. 
 
-After borrowing, users need to maintain their loans. The maximum amount of loan users can maintain is determined by the **Maintenance Asset Weight (MAW)** of of the deposited asset and the **Maintenance Borrow Weight (MBW)** of the borrowed asset, where MAW is lower or equal than 100% and MBW is higher than or equal to 100%.
+After borrowing, users need to maintain their loans. The maximum amount of loan users can maintain is determined by the **Maintenance Asset Weight (MAW)** of the deposited asset and the **Maintenance Borrow Weight (MBW)** of the borrowed asset, where MAW is less than or equal to 100% and MBW is greater than or equal to 100%.
 
-Assets with lower volatility (e.g., USDC) have higher IAWs and MAWs, enabling higher borrowing power. Volatile assets, by contrast, have lower IAWs and MAWs. Likewise, assets with lower volatility have lower ILWs and MLWs, allowing users to borrow them at a higher percentage against collateralized assets. Conversely, volitile assets generally have higher ILWs and MLWs. 
+Assets with lower volatility (e.g., USDC) have higher IAWs and MAWs, enabling higher borrowing power. Volatile assets, by contrast, have lower IAWs and MAWs. Likewise, assets with lower volatility have lower IBWs and MBWs, allowing users to borrow them at a higher percentage against collateralized assets. Conversely, volatile assets generally have higher IBWs and MBWs. 
 
 ## Margin Parameters
 
