@@ -4,8 +4,11 @@ title: Glossary
 
 ## Core Concepts
 
+#### Base Asset and Quote Asset
+In a trading pair, the **Base Asset** is the primary asset being bought or sold (e.g., BTC in BTC/USDT). The **Quote Asset** is the counter-asset used to price and settle the trade (e.g., USDT in BTC/USDT). Prices are denominated in the Quote Asset per unit of Base Asset.
+
 #### Index Price
-The Index Price is a price feed that reflects the fair spot market value of the asset. It is derived from a combination of prices from external data sources (currently using Pyth oracle) to provide a reliable and tamper-resistant reference for various calculations, including funding rates, mark prices, and risk management.
+The Index Price is a price feed that reflects the fair *spot market* value of the asset. It is derived from a combination of prices from external data sources to provide a reliable and tamper-resistant reference for various calculations. Please refer to [Index Price and Mark Price](/trading/index-price-mark-price#mark-price) for more details.
 
 #### Leverage
 The ability to trade a position larger than your initial capital.
@@ -13,14 +16,14 @@ The ability to trade a position larger than your initial capital.
 #### Liquidation
 The forced closing of a leveraged position by the protocol when the trader's margin falls below the maintenance margin level. This happens to prevent a trader's losses from exceeding their collateral.
 
+#### Mark Price
+Mark Price is the reference price to determine the fair, real-time value of a perpetual position. Please refer to [Index Price and Mark Price](/trading/index-price-mark-price#mark-price) for more details.
+
 #### Maker
 A Maker is a trader who places a limit order that is not immediately filled.
 
 #### Margin
 The collateral a trader must deposit to open and maintain a leveraged position. It acts as a form of security for the exchange.
-
-#### Mark Price
-Mark Price, derived from a combination of the Index Price and market data, is the reference price to determine the fair, real-time value of positions and collateral for margining, risk checks, and liquidation calculations.
 
 #### Mid Price
 The average of the best available bid and ask prices on an order book.
@@ -35,7 +38,7 @@ A Taker is a trader who places an order that gets filled immediately against an 
 ## Portfolio Margin
 
 #### Initial Asset Value (IAV)
-The initial-level, risk-weighted value of an asset, calculated using its Index Price. It measures how much of the asset's market value can be counted as initial collateral for opening new positions or borrowing after applying the [Initial Asset Weight (IAW)](/glossary#initial-asset-weight-iaw). For asset $$i$$,
+The initial-level, risk-weighted value of an asset, calculated using its [Index Price](/glossary#index-price). It measures how much of the asset's market value can be counted as initial collateral for opening new positions or borrowing after applying the [Initial Asset Weight (IAW)](/glossary#initial-asset-weight-iaw). For asset $$i$$,
 
 ```math
 \text{IAV}_i = \text{AssetValue}_i \times \text{IAW}_i
@@ -45,7 +48,7 @@ The initial-level, risk-weighted value of an asset, calculated using its Index P
 The risk-adjusted value multiplier applied to each asset when determining how much of it can be counted as initial collateral for opening new positions or borrowing. The range of IAW is $$0 \le \text{IAW} \le 1$$.
 
 #### Initial Borrow Value (IBV)
-The initial-level, risk-weighted value of a borrowed asset, calculated using its Index Price. It quantifies the initial liability after applying the [Initial Borrow Weight (IBW)](/glossary#initial-borrow-weight-ibw). For asset $$i$$,
+The initial-level, risk-weighted value of a borrowed asset, calculated using its [Index Price](/glossary#index-price). It quantifies the initial liability after applying the [Initial Borrow Weight (IBW)](/glossary#initial-borrow-weight-ibw). For asset $$i$$,
 
 ```math
 \text{IBV}_i = \text{AssetValue}_i \times \text{IBW}_i
@@ -55,7 +58,7 @@ The initial-level, risk-weighted value of a borrowed asset, calculated using its
 The risk multiplier applied to each borrowed asset when determining the initial liability value for opening new positions or borrowing. The range of IBW is $$\text{IBW} \ge 1$$.
 
 #### Maintenance Asset Value (MAV)
-The maintenance-level, risk-weighted value of an asset, calculated using its Index Price. It measures how much of the asset's market value can be counted toward the account's maintenance margin after applying the [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $$i$$,
+The maintenance-level, risk-weighted value of an asset, calculated using its [Index Price](/glossary#index-price). It measures how much of the asset's market value can be counted toward the account's maintenance margin after applying the [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $$i$$,
 
 ```math
 \text{MAV}_i = \text{AssetValue}_i \times \text{MAW}_i
@@ -65,7 +68,7 @@ The maintenance-level, risk-weighted value of an asset, calculated using its Ind
 The risk-adjusted value multiplier used to assess the maintenance-level collateral value required to keep positions open and avoid liquidation. The range of MAW is $$0 \le \text{MAW} \le 1$$.
 
 #### Maintenance Borrow Value (MBV)
-The maintenance-level, risk-weighted value of a borrowed asset, calculated using its Index Price. It quantifies the effective maintenance liability after applying the risk-adjusted [Maintenance Borrow Weight (MBW)](/glossary#maintenance-borrow-weight-mbw). For asset $$i$$,
+The maintenance-level, risk-weighted value of a borrowed asset, calculated using its [Index Price](/glossary#index-price). It quantifies the effective maintenance liability after applying the risk-adjusted [Maintenance Borrow Weight (MBW)](/glossary#maintenance-borrow-weight-mbw). For asset $$i$$,
 
 ```math
 \text{MBV}_i = \text{AssetValue}_i \times \text{MBW}_i
@@ -75,25 +78,22 @@ The maintenance-level, risk-weighted value of a borrowed asset, calculated using
 The risk multiplier applied to each liability when assessing maintenance-level solvency. The range of MBW is $$\text{MBW} \le 1$$.
 
 #### Maintenance Margin Requirement (MMReq)
-Maintenance Margin Requirement (MMReq), or Total Liabilities, represents an account's aggregate maintenance-level, risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, and open orders. It represents the minimum collateral an account must maintain to avoid liquidation.
+Maintenance Margin Requirement (MMReq), or **Total Liabilities**, represents an account's aggregate maintenance-level, risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, and open orders. It represents the minimum collateral an account must maintain to avoid liquidation.
 
 #### Initial Margin Requirement (IMReq)
-Initial Margin Requirement (IMReq), or Total Initial Liabilities, represents an account's aggregate initial-level, risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, and open orders. It is used to determine the initial collateral requirements for opening new positions or borrowing.
+Initial Margin Requirement (IMReq), or **Total Initial Liabilities**, represents an account's aggregate initial-level, risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, and open orders. It is used to determine the initial collateral requirements for opening new positions or borrowing.
 
-#### Portfolio Margin Ratio (PMR)
-The ratio of an account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement-mmreq):
+#### Portfolio Maintenance Margin Ratio (PMMR)
+Portfolio Maintenance Margin Ratio (PMMR), or **Collateral Ratio**, is the ratio of an account's [Total Collateral Value](/glossary#total-collateral-value) to its [Maintenance Margin Requirement](/glossary#maintenance-margin-requirement-mmreq). When it falls below 1, the account is undercollateralized and subject to liquidation.
 
-```math
-\text{PMR} = \frac {\text{TotalCollateralValue}} {\text{MaintenanceMarginRequirement}}
-```
-
-When Portfolio Margin Ratio falls below 1, the account is undercollateralized and subject to liquidation.
+#### Portfolio Initial Margin Ratio (PIMR)
+Portfolio Initial Margin Ratio (PIMR), or **Initial Collateral Ratio**, is the ratio of an account's [Total Initial Collateral Value](/glossary#total-initial-collateral-value) to its [Initial Margin Requirement](/glossary#initial-margin-requirement-imreq). This ratio determines the maximum perpetual possition size you can open and the maximum amount of assets you can borrow or withdraw.
 
 #### Total Collateral Value
-Total Collateral Value, or Total Collateral, is the sum of the aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all assets in an account, the [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl), the unsettled funding payments, and the maintenance-level value of assets associated with open spot orders awaiting execution.
+Total Collateral Value, or **Total Collateral**, is the sum of the aggregate [Maintenance Asset Value (MAV)](/glossary#maintenance-asset-value-mav) for all assets in an account, the [Unrealized PnL](/glossary#unrealized-profit-and-loss-unrealized-pnl), the unsettled funding payments, and the maintenance-level value of assets associated with open spot orders awaiting execution.
 
 #### Total Initial Collateral Value
-Total Initial Collateral Value, or Total Initial Collateral, is the aggregate [Initial Asset Value (IAV)](/glossary#initial-asset-value-iav) for all assets in an account and the initial-level value of assets associated with open spot orders awaiting execution. It is used to determine how much collateral is available for opening new positions or borrowing.
+Total Initial Collateral Value, or **Total Initial Collateral**, is the aggregate [Initial Asset Value (IAV)](/glossary#initial-asset-value-iav) for all assets in an account and the initial-level value of assets associated with open spot orders awaiting execution. It is used to determine how much collateral is available for opening new positions or borrowing.
 
 ## Lending and Borrowing
 
@@ -101,7 +101,7 @@ Total Initial Collateral Value, or Total Initial Collateral, is the aggregate [I
 A parameter that determines what percentage of the interest paid by borrowers is allocated to the protocol. This portion of the interest helps fund the protocol's security and growth.
 
 #### Utilization
-Utilization, or Utilization Rate, measures the proportion of an asset currently being borrowed compared to the total supplied amount.
+Utilization, or **Utilization Rate**, measures the proportion of an asset currently being borrowed compared to the total supplied amount.
 
 ```math
 \text{Utilization Rate} = \frac{\text{Total Borrowed}}{\text{Total Supplied}}
@@ -111,13 +111,13 @@ Utilization, or Utilization Rate, measures the proportion of an asset currently 
 ## Perpetual Contract Trading
 
 #### Funding Rate
-Funding Rate is a periodic rate applied to perpetual positions to calculate the funding payment exchanged between long and short positions. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price. 
+Funding Rate is a periodic rate applied to perpetual positions to calculate the funding payment exchanged between long and short positions. It is the primary mechanism to keep the perpetual contract's price anchored to the underlying asset's spot price. Please refer to [Funding Rate](/trading/funding-rates) for more details.
 
 #### Initial Margin
 The minimum amount of margin required to open a new perpetual position.
 
 #### Initial Margin Ratio (IMR)
-The percentage of a new perpetual position's value required as collateral to open the position.
+The Initial Margin Ratio (IMR) of a perpetual position is the percentage of a new perpetual position's [Notional Value](/glossary#notional-value) required as collateral to open the position.
 
 #### Long/Short Position
 A **long** position is a bet that the asset's price will go up, while a **short** position is a bet that it will go down.
@@ -126,10 +126,10 @@ A **long** position is a bet that the asset's price will go up, while a **short*
 The minimum amount of margin required to keep a perpetual position open. 
 
 #### Maintenance Margin Ratio (MMR)
-The minimum percentage of the perpetual position value that must be maintained as collateral to keep the position open. Falling below this ratio can trigger liquidation.
+The Maintenance Margin Ratio (MMR) of a perpetual position is the minimum percentage of a perpetual position's [Notional Value](/glossary#notional-value) that must be maintained as collateral to keep the position open.
 
 #### Notional Value
-The Notional Value of a perpetual position represents the value of the position based on the Mark Price, calculated as the position size multiplied by the Mark Price.
+The Notional Value of a perpetual position is calculated as the [Position Size](/glossary#position-size) multiplied by the price. To determine the fair, real-time value of a perpetual position, the price is the [Mark Price](/glossary#mark-price).
 
 #### Open Interest (OI)
 Open Interest (OI) is the number or notional value of all perpetual contracts that have been opened and have not yet been closed or settled. Because every contract requires two sides (one Long and one Short), the Long OI is mathematically identical to the Short OI:
@@ -138,5 +138,8 @@ Open Interest (OI) is the number or notional value of all perpetual contracts th
 \text{OI} = \text{Long OI} = \text{Short OI}
 ```
 
+#### Position Size
+The Position Size of a perpetual position represents the number of [Base Assets](/glossary#base-asset-and-quote-asset) held in the position.
+
 #### Unrealized Profit and Loss (Unrealized PnL)
-The Unrealized PnL of a perpetual position represents the current gain or loss of an open position based on the Mark Price, before the position is closed or settled.
+The Unrealized PnL of a perpetual position represents the current gain or loss of an open position based on the [Mark Price](/glossary#mark-price), before the position is closed or settled.
