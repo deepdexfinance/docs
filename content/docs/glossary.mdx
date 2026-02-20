@@ -38,44 +38,44 @@ A Taker is a trader who places an order that gets filled immediately against an 
 ## Portfolio Margin
 
 #### Initial Asset Value (IAV)
-The initial-level, risk-weighted value of an asset, calculated using its [Index Price](/glossary#index-price). It measures how much of the asset's market value can be counted as initial collateral for opening new positions or borrowing after applying the [Initial Asset Weight (IAW)](/glossary#initial-asset-weight-iaw). For asset $$i$$,
+The initial-level, risk-weighted value of an asset, calculated using its [Index Price](/glossary#index-price). It measures how much of the asset's market value can be counted as initial collateral for opening new positions or borrowing after applying the [Initial Asset Weight (IAW)](/glossary#initial-asset-weight-iaw). For asset $i$,
 
 ```math
 \text{IAV}_i = \text{AssetValue}_i \times \text{IAW}_i
 ```
 
 #### Initial Asset Weight (IAW)
-The risk-adjusted value multiplier applied to each asset when determining how much of it can be counted as initial collateral for opening new positions or borrowing. The range of IAW is $$0 \le \text{IAW} \le 1$$.
+The risk-adjusted value multiplier applied to each asset when determining how much of it can be counted as initial collateral for opening new positions or borrowing. The range of IAW is $0 \le \text{IAW} \le 1$.
 
 #### Initial Borrow Value (IBV)
-The initial-level, risk-weighted value of a borrowed asset, calculated using its [Index Price](/glossary#index-price). It quantifies the initial liability after applying the [Initial Borrow Weight (IBW)](/glossary#initial-borrow-weight-ibw). For asset $$i$$,
+The initial-level, risk-weighted value of a borrowed asset, calculated using its [Index Price](/glossary#index-price). It quantifies the initial liability after applying the [Initial Borrow Weight (IBW)](/glossary#initial-borrow-weight-ibw). For asset $i$,
 
 ```math
 \text{IBV}_i = \text{AssetValue}_i \times \text{IBW}_i
 ```
 
 #### Initial Borrow Weight (IBW)
-The risk multiplier applied to each borrowed asset when determining the initial liability value for opening new positions or borrowing. The range of IBW is $$\text{IBW} \ge 1$$.
+The risk multiplier applied to each borrowed asset when determining the initial liability value for opening new positions or borrowing. The range of IBW is $\text{IBW} \ge 1$.
 
 #### Maintenance Asset Value (MAV)
-The maintenance-level, risk-weighted value of an asset, calculated using its [Index Price](/glossary#index-price). It measures how much of the asset's market value can be counted toward the account's maintenance margin after applying the [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $$i$$,
+The maintenance-level, risk-weighted value of an asset, calculated using its [Index Price](/glossary#index-price). It measures how much of the asset's market value can be counted toward the account's maintenance margin after applying the [Maintenance Asset Weight (MAW)](/glossary#maintenance-asset-weight-maw). For asset $i$,
 
 ```math
 \text{MAV}_i = \text{AssetValue}_i \times \text{MAW}_i
 ```
 
 #### Maintenance Asset Weight (MAW)
-The risk-adjusted value multiplier used to assess the maintenance-level collateral value required to keep positions open and avoid liquidation. The range of MAW is $$0 \le \text{MAW} \le 1$$.
+The risk-adjusted value multiplier used to assess the maintenance-level collateral value required to keep positions open and avoid liquidation. The range of MAW is $0 \le \text{MAW} \le 1$.
 
 #### Maintenance Borrow Value (MBV)
-The maintenance-level, risk-weighted value of a borrowed asset, calculated using its [Index Price](/glossary#index-price). It quantifies the effective maintenance liability after applying the risk-adjusted [Maintenance Borrow Weight (MBW)](/glossary#maintenance-borrow-weight-mbw). For asset $$i$$,
+The maintenance-level, risk-weighted value of a borrowed asset, calculated using its [Index Price](/glossary#index-price). It quantifies the effective maintenance liability after applying the risk-adjusted [Maintenance Borrow Weight (MBW)](/glossary#maintenance-borrow-weight-mbw). For asset $i$,
 
 ```math
 \text{MBV}_i = \text{AssetValue}_i \times \text{MBW}_i
 ```
 
 #### Maintenance Borrow Weight (MBW)
-The risk multiplier applied to each liability when assessing maintenance-level solvency. The range of MBW is $$\text{MBW} \le 1$$.
+The risk multiplier applied to each liability when assessing maintenance-level solvency. The range of MBW is $\text{MBW} \le 1$.
 
 #### Maintenance Margin Requirement (MMReq)
 Maintenance Margin Requirement (MMReq), or **Total Liabilities**, represents an account's aggregate maintenance-level, risk-weighted value of all liabilities. It includes liabilities arising from borrowed assets, open positions, and open orders. It represents the minimum collateral an account must maintain to avoid liquidation.

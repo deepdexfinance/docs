@@ -6,13 +6,13 @@ title: Interest Rate
 
 The borrow interest rate for the DeepDEX lending protocol is determined by a multi-linear model. This model features a tiered structure with a defined minimum rate, three kink points, and a maximum rate at 100% utilization. For each asset, the following parameters are defined:
 
-- Minimum rate $$R_\text{min}$$
-- Utilization rates ($$U_1$$, $$U_2$$, $$U_3$$, etc.) and the corresponding interest rates ($$R_1$$, $$R_2$$, $$R_3$$, etc.) at multiple (up to five) kinks
-- Maximum rate $$R_\text{max}$$ at 100% utilization
+- Minimum rate $R_\text{min}$
+- Utilization rates ($U_1$, $U_2$, $U_3$, etc.) and the corresponding interest rates ($R_1$, $R_2$, $R_3$, etc.) at multiple (up to five) kinks
+- Maximum rate $R_\text{max}$ at 100% utilization
 
 ## Supply Interest Rate
 
-The supply interest rate is derived from the borrow rate, utilization ($$U$$), and the [reserve factor](/glossary#reserve-factor) ($$\rho$$):
+The supply interest rate is derived from the borrow rate, utilization ($U$), and the [reserve factor](/glossary#reserve-factor) ($\rho$):
 
 ```math
 R_\text{supply} = R_\text{borrow} \times U \times (1 - \rho)
@@ -25,19 +25,19 @@ R_\text{supply} = R_\text{borrow} \times U \times (1 - \rho)
     <thead>
       <tr>
         <th style={{background: '#fff', zIndex: 2 }}>Asset</th>
-        <th>$$R_\text{min}$$</th>
-        <th>$$U_1$$</th>
-        <th>$$R_1$$</th>
-        <th>$$U_2$$</th>
-        <th>$$R_2$$</th>
-        <th>$$U_3$$</th>
-        <th>$$R_3$$</th>
-        <th>$$U_4$$</th>
-        <th>$$R_4$$</th>
-        <th>$$U_5$$</th>
-        <th>$$R_5$$</th>
-        <th>$$R_\text{max}$$</th>
-        <th>$$\rho$$</th>
+        <th>$R_\text{min}$</th>
+        <th>$U_1$</th>
+        <th>$R_1$</th>
+        <th>$U_2$</th>
+        <th>$R_2$</th>
+        <th>$U_3$</th>
+        <th>$R_3$</th>
+        <th>$U_4$</th>
+        <th>$R_4$</th>
+        <th>$U_5$</th>
+        <th>$R_5$</th>
+        <th>$R_\text{max}$</th>
+        <th>$\rho$</th>
       </tr>
     </thead>
     <tbody>
