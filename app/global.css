@@ -17,3 +17,9 @@
 .prose h2:first-child {
     margin-top: 0 !important;
 }
+
+.prose img {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
