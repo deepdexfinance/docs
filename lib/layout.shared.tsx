@@ -12,8 +12,8 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: (
         <>
-          <img alt="DeepDEX" src="/logo.png" className="w-8" />
-          DeepDEX 
+          <img alt="DeepX" src="/logo.png" className="w-8" />
+          DeepX
         </>
       ),
     },

@@ -4,7 +4,7 @@ title: Interest Rate
 
 ## Borrow Interest Rate
 
-The borrow interest rate for the DeepDEX lending protocol is determined by a multi-linear model. This model features a tiered structure with a defined minimum rate, three kink points, and a maximum rate at 100% utilization. For each asset, the following parameters are defined:
+The borrow interest rate for the DeepX lending protocol is determined by a multi-linear model. This model features a tiered structure with a defined minimum rate, three kink points, and a maximum rate at 100% utilization. For each asset, the following parameters are defined:
 
 - Minimum rate $R_\text{min}$
 - Utilization rates ($U_1$, $U_2$, $U_3$, etc.) and the corresponding interest rates ($R_1$, $R_2$, $R_3$, etc.) at multiple (up to five) kinks
@@ -18,7 +18,7 @@ The supply interest rate is derived from the borrow rate, utilization ($U$), and
 R_\text{supply} = R_\text{borrow} \times U \times (1 - \rho)
 ```
 
-## DeepDEX Lending Protocol Parameters
+## DeepX Lending Protocol Parameters
 
 <div style={{ overflowX: 'auto' }}>
   <table style={{}}>
