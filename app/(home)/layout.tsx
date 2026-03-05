@@ -5,7 +5,7 @@ import { source } from '@/lib/source';
 function docsOptions(): DocsLayoutProps {
   return {
     tree: source.pageTree,
-    githubUrl: 'https://github.com/deepdexfinance/docs',
+    githubUrl: 'https://github.com/deepxfinance/docs',
     ...baseOptions(),
   };
 }

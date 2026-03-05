@@ -28,7 +28,7 @@ export default async function Page(props: PageProps<'/[[...slug]]'>) {
           <LLMCopyButton markdownUrl={markdownUrl} />
           <ViewOptions
             markdownUrl={markdownUrl}
-            githubUrl={`https://github.com/deepdexfinance/docs/blob/main/content/docs/${page.path}`}
+            githubUrl={`https://github.com/deepxfinance/docs/blob/main/content/docs/${page.path}`}
           />
         </div>
 
