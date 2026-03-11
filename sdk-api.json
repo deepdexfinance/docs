@@ -5,7 +5,7 @@
     "description": "DeepX Decentralized Exchange Backend API - Version 2\n\n## Error Codes\n\n| Range | Category | Description |\n|-------|----------|-------------|\n| 1xxx | Client Errors | Bad request, validation errors |\n| 2xxx | Auth Errors | Authentication issues |\n| 3xxx | Resource Errors | Not found, conflicts |\n| 4xxx | Service Errors | Database, cache errors |\n| 5xxx | Internal Errors | Server errors |\n\n### Common Error Codes\n- **1001** INVALID_PARAMETER - Invalid parameter value\n- **1003** INVALID_ADDRESS - Invalid wallet address\n- **3001** MARKET_NOT_FOUND - Market not found\n- **3002** ORDER_NOT_FOUND - Order not found\n- **4000** DATABASE_ERROR - Database error\n- **5000** INTERNAL_ERROR - Server error",
     "contact": {
       "name": "DeepX Team",
-      "url": "https://deepdex.finance",
+      "url": "https://deepx.fi",
       "email": "support@deepdex.io"
     },
     "license": {
