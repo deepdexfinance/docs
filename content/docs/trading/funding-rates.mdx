@@ -78,7 +78,7 @@ I - P = 0.01\% - 0.04\% = -0.03\%
 ```
 
 **Step 2: Clamp the difference**
-The clamp range is $[-0.05\%, 0.05\%]$. If the difference is within this range, it is clamped to the range.
+In this example, let's assume that the clamp range is set to be $[-0.05\%, 0.05\%]$. If the difference is within this range, it is clamped to the range.
 ```math
 \text{clamp}(I - P, -0.05\%, 0.05\%) = I - P
 ```
@@ -102,7 +102,7 @@ I - P = 0.01\% - (-0.06\%) = 0.07\%
 ```
 
 **Step 2: Clamp the difference**
-The clamp range is $[-0.05\%, 0.05\%]$. If the difference is above the maximum, it is clamped to the maximum.
+In this example, let's assume that the clamp range is set to be $[-0.05\%, 0.05\%]$. If the difference is above the maximum, it is clamped to the maximum.
 ```math
 \text{clamp}(I - P, -0.05\%, 0.05\%) = 0.05\%
 ```
