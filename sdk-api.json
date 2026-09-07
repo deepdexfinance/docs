@@ -3,7 +3,7 @@
   "info": {
     "title": "DeepX API",
     "version": "1.1.0",
-    "description": "# REST API Guide\n\n## General API Information\n\n- **Time Format**: All timestamps are in milliseconds (ms) by default.\n- **Data Order**: Data is returned in chronological order, unless noted otherwise. Here is how the `startTime` and `endTime` parameters work:\n  * Without `startTime` or `endTime`, returns the most recent items up to the `limit`.\n  * With `startTime`, returns oldest items from `startTime` up to the `limit`.\n  * With `endTime`, returns most recent items up to `endTime` and the `limit`.\n  * With both, behaves like `startTime` but does not exceed `endTime`.\n- **Pagination**: Historical data is paginated using `cursor` and `limit`. All paginated responses include `nextCursor` and `hasNext` metadata:\n  * `nextCursor`: The ID of the oldest record in the current page. Pass this as `cursor` in the next request to fetch the next (older) page. `null` when there are no more records.\n  * `hasNext`: `true` if more records are available beyond the current page. Stop paginating when `hasNext` is `false` (equivalent to the returned array length being `< limit`).\n  * When combining with `startTime`/`endTime`, all three filters apply together:\n    - With `cursor` and `endTime`, returns items after `cursor` and before `endTime` up to the `limit`.\n    - With `cursor` and `startTime`, returns items after `cursor` and after `startTime` up to the `limit`.\n    - With `cursor`, `startTime`, and `endTime`, returns items after `cursor` and between `startTime` and `endTime` up to the `limit`.\n  * When `cursor` points to a record earlier than `startTime`, all candidate records fall before the time window. The response returns an empty `items` array with `nextCursor: null` and `hasNext: false`.\n",
+    "description": "# REST API Guide\n\n## General API Information\n\n- **Time Format**: All timestamps are in milliseconds (ms) by default.\n- **Data Order**: Data is returned in chronological order, unless noted otherwise. Here is how the `startTime` and `endTime` parameters work:\n  * Without `startTime` or `endTime`, returns the most recent items up to the `limit`.\n  * With `startTime`, returns oldest items from `startTime` up to the `limit`.\n  * With `endTime`, returns most recent items up to `endTime` and the `limit`.\n  * With both, behaves like `startTime` but does not exceed `endTime`.\n- **Historical Data Retrieval**: Historical endpoints use one of two response patterns. Check the endpoint definition for its parameters and response schema:\n  * **Cursor-paginated endpoints** declare `cursor` and return an object containing `items`, `nextCursor`, and `hasNext`. `nextCursor` is an opaque, base64-encoded value; do not parse it or infer a record ID, timestamp, or ordering from it. When `hasNext` is `true`, pass `nextCursor` unchanged as `cursor` in the next request. Stop only when `hasNext` is `false`; the number of returned items is not a reliable completion signal. `nextCursor` is `null` on the final page.\n  * **Time-window endpoints** declare `startTime` and/or `endTime` but no `cursor`, and return an array directly. These responses do not include `nextCursor` or `hasNext`. Candles, open-interest history, funding-rate history, long-short-ratio history, and lending-market history use this pattern.\n  * When a cursor-paginated endpoint also declares `startTime` or `endTime`, those time filters apply to every page. Reuse the same filters when passing `nextCursor` to the next request.\n",
     "license": {
       "name": "MIT",
       "url": "https://opensource.org/licenses/MIT"
@@ -309,19 +309,62 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
     },
-    "/v1/account/wallets/{address}/one-click-trading-accounts": {
+    "/v1/account/wallets/{address}/delegate-accounts": {
       "get": {
         "tags": [
           "Account"
         ],
-        "summary": "List One-Click Trading Accounts",
+        "summary": "List Wallet Delegate Accounts",
         "security": [],
-        "description": "Retrieves a list of session-key (One-Click Trading) accounts linked to a primary wallet address.",
-        "operationId": "getOneClickTradingAccounts",
+        "description": "Retrieves all delegate accounts configured for a wallet owner, including label, expiry, and permission mode.",
+        "operationId": "getWalletDelegateAccounts",
         "parameters": [
           {
             "name": "address",
@@ -338,7 +381,237 @@
         ],
         "responses": {
           "200": {
-            "description": "A list of session-key account addresses.",
+            "description": "The delegates configured for the wallet owner, in configuration order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "description": "A delegate account configured for a wallet owner.",
+                    "required": [
+                      "delegateAddress",
+                      "delegateName",
+                      "validUntil",
+                      "mode",
+                      "createTime"
+                    ],
+                    "x-on-chain": {
+                      "struct": "DelegateInfo",
+                      "registry": "pallets/primitives/src/types.rs",
+                      "storage": "pallet_subaccount::DelegateAccountsFor",
+                      "mappings": {
+                        "delegateAddress": "delegate_address",
+                        "delegateName": "delegate_name",
+                        "validUntil": "valid_until",
+                        "mode": "mode (pallet_primitives::types::DelegateMode, only PlaceOrCancelOrder/Disable are assignable)",
+                        "createTime": "create_time",
+                        "active": "derived from DelegateInfo::is_active(now_ms) (`valid_until == 0 || valid_until > now_ms`)"
+                      }
+                    },
+                    "properties": {
+                      "delegateAddress": {
+                        "description": "The delegate wallet address.",
+                        "type": "string",
+                        "pattern": "^0x[a-fA-F0-9]{40}$",
+                        "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
+                      },
+                      "delegateName": {
+                        "type": "string",
+                        "description": "Human-readable label assigned by the wallet owner to this delegate account.",
+                        "example": "risk-bot"
+                      },
+                      "validUntil": {
+                        "type": "integer",
+                        "format": "int64",
+                        "minimum": 0,
+                        "description": "Unix timestamp in milliseconds when the delegate permission expires. `0` means the delegate never expires.\n",
+                        "example": 1781964821000
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "PlaceOrCancelOrder",
+                          "Disable"
+                        ],
+                        "description": "Delegate permission mode. `PlaceOrCancelOrder` grants order placement and cancellation and is the default. `Disable` suspends the delegate without removing it.\n",
+                        "example": "PlaceOrCancelOrder"
+                      },
+                      "createTime": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Unix timestamp in milliseconds when the delegate was first configured.",
+                        "example": 1781964821000
+                      },
+                      "active": {
+                        "type": "boolean",
+                        "description": "Whether the delegate is currently usable. A delegate is active until it expires; a never-expiring delegate is always active.\n",
+                        "example": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request. The request body or URL is malformed (invalid JSON, wrong types, missing required fields).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10002,
+                  "msg": "Request body is not valid JSON."
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests. The client breached the designated rate limit weight.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10010,
+                  "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/delegates/{address}/delegator-accounts": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "List Delegate Wallet Owners",
+        "security": [],
+        "description": "Retrieves all wallet owners (delegators) bound to a delegate account.",
+        "operationId": "getDelegateDelegatorAccounts",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The delegate wallet address.",
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "An Ethereum-compatible address in 0x-prefixed hex format (20 bytes).",
+              "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet owners managed by the delegate account.",
             "content": {
               "application/json": {
                 "schema": {
@@ -435,6 +708,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -631,6 +947,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -991,6 +1350,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -1183,6 +1585,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -1242,7 +1687,7 @@
                     "equity": {
                       "type": "string",
                       "format": "decimal",
-                      "description": "Net account value in USD. Calculated as total deposits minus total borrows minus accrued borrow interest, plus unrealized PnL across all open positions and unsettled funding payments.\n",
+                      "description": "Net account value in USD. Calculated as total deposits minus total borrows, plus unrealized PnL across all open positions and unsettled funding payments.\n",
                       "example": "799.80"
                     },
                     "totalDepositsUsd": {
@@ -1441,6 +1886,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -1616,6 +2104,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -1917,6 +2448,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -1978,7 +2552,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -2025,6 +2599,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -2291,6 +2866,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -2353,7 +2971,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -2414,6 +3032,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -2470,7 +3089,7 @@
                             ],
                             "properties": {
                               "orderId": {
-                                "description": "On-chain order ID.",
+                                "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
                                 "type": "string",
                                 "example": "123456789"
                               },
@@ -2626,14 +3245,14 @@
                                   {
                                     "type": "string",
                                     "pattern": "^0x[a-fA-F0-9]{64}$",
-                                    "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                                    "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+                                    "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                                    "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
                                   },
                                   {
                                     "type": "null"
                                   }
                                 ],
-                                "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
+                                "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
                               },
                               "cancelReason": {
                                 "type": "string",
@@ -2788,6 +3407,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -2799,7 +3461,7 @@
         ],
         "summary": "Get Subaccount Open Perpetual Orders",
         "security": [],
-        "description": "Retrieves currently open perpetual orders for a specific subaccount.",
+        "description": "Retrieves currently open perpetual orders for a specific subaccount. Results are ordered from newest to oldest and paginated with an opaque cursor.",
         "operationId": "getPerpOpenOrders",
         "parameters": [
           {
@@ -2830,224 +3492,284 @@
               ],
               "example": "BTC-USDC"
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of records to return.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "A list of open perpetual orders.",
+            "description": "A page of open perpetual orders.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "description": "A perpetual order record.",
-                    "required": [
-                      "orderId",
-                      "symbol",
-                      "subaccount",
-                      "side",
-                      "type",
-                      "status",
-                      "time",
-                      "updatedTime",
-                      "price",
-                      "qty",
-                      "filledQty",
-                      "filledQuoteQty",
-                      "avgFilledPrice",
-                      "takeProfit",
-                      "stopLoss",
-                      "reduceOnly",
-                      "postOnly",
-                      "fee",
-                      "feeAsset",
-                      "blockNumber",
-                      "txHash"
-                    ],
-                    "properties": {
-                      "orderId": {
-                        "description": "On-chain order ID.",
-                        "type": "string",
-                        "example": "123456789"
-                      },
-                      "symbol": {
-                        "type": "string",
-                        "description": "A perpetual market symbol.",
-                        "enum": [
-                          "BTC-USDC",
-                          "ETH-USDC",
-                          "SOL-USDC"
-                        ],
-                        "example": "BTC-USDC"
-                      },
-                      "subaccount": {
-                        "description": "Subaccount address that placed the order.",
-                        "type": "string",
-                        "pattern": "^0x[a-fA-F0-9]{40}$",
-                        "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
-                      },
-                      "side": {
-                        "type": "string",
-                        "description": "The side of an order.",
-                        "enum": [
-                          "BUY",
-                          "SELL"
-                        ],
-                        "example": "BUY"
-                      },
-                      "type": {
-                        "type": "string",
-                        "description": "Basic order type.",
-                        "enum": [
-                          "LIMIT",
-                          "MARKET"
-                        ],
-                        "example": "LIMIT"
-                      },
-                      "status": {
-                        "type": "string",
-                        "description": "The current status of an order.\n\n| Value | Description |\n|---|---|\n| `OPEN` | Active on the orderbook. |\n| `PARTIALLY_FILLED` | Partially executed; remainder still active. |\n| `FILLED` | Fully executed. |\n| `CANCELED` | Canceled by user or protocol. |\n| `REJECTED` | Reverted or failed on-chain. |\n| `EXPIRED` | The order was canceled according to the order type's rules or by the exchange. |\n",
-                        "enum": [
-                          "OPEN",
-                          "PARTIALLY_FILLED",
-                          "FILLED",
-                          "CANCELED",
-                          "REJECTED",
-                          "EXPIRED"
-                        ],
-                        "example": "FILLED"
-                      },
-                      "time": {
-                        "description": "Order creation timestamp in milliseconds.",
-                        "type": "integer",
-                        "format": "int64",
-                        "minimum": 1000000000000,
-                        "maximum": 4102444800000,
-                        "example": 1678886400000
-                      },
-                      "updatedTime": {
-                        "description": "Timestamp of the last state change (fill, cancel, etc.).",
-                        "type": "integer",
-                        "format": "int64",
-                        "minimum": 1000000000000,
-                        "maximum": 4102444800000,
-                        "example": 1678886400000
-                      },
-                      "price": {
-                        "type": [
-                          "string",
-                          "null"
-                        ],
-                        "format": "decimal",
-                        "description": "Limit price. `null` for MARKET orders.",
-                        "example": "2019.63"
-                      },
-                      "qty": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "Order quantity in base asset.",
-                        "example": "0.01"
-                      },
-                      "filledQty": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "Filled quantity in base asset.",
-                        "example": "0.01"
-                      },
-                      "filledQuoteQty": {
-                        "type": [
-                          "string",
-                          "null"
-                        ],
-                        "format": "decimal",
-                        "description": "Filled quote asset quantity. `null` when historical fill aggregation is unavailable.",
-                        "example": "20.1963"
-                      },
-                      "avgFilledPrice": {
-                        "type": [
-                          "string",
-                          "null"
-                        ],
-                        "format": "decimal",
-                        "description": "Average filled price across all fills of this order. `null` if no fills yet.",
-                        "example": "2019.63"
-                      },
-                      "takeProfit": {
-                        "type": [
-                          "string",
-                          "null"
-                        ],
-                        "format": "decimal",
-                        "description": "Take-profit price if set.",
-                        "example": "2200.00"
-                      },
-                      "stopLoss": {
-                        "type": [
-                          "string",
-                          "null"
-                        ],
-                        "format": "decimal",
-                        "description": "Stop-loss price if set.",
-                        "example": "1800.00"
-                      },
-                      "reduceOnly": {
-                        "type": "boolean",
-                        "description": "Whether the order is reduce-only.",
-                        "example": false
-                      },
-                      "postOnly": {
-                        "type": "boolean",
-                        "description": "Whether the order is post-only (maker-only).",
-                        "example": false
-                      },
-                      "fee": {
-                        "type": "string",
-                        "format": "decimal",
-                        "description": "Total fee charged for this order.",
-                        "example": "0.002022"
-                      },
-                      "feeAsset": {
-                        "type": "string",
-                        "description": "Asset in which the fee is charged.",
-                        "example": "USDC"
-                      },
-                      "blockNumber": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Block number at which the order was submitted on-chain.",
-                        "example": 8996440
-                      },
-                      "txHash": {
-                        "oneOf": [
-                          {
-                            "type": "string",
-                            "pattern": "^0x[a-fA-F0-9]{64}$",
-                            "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                            "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
-                          },
-                          {
-                            "type": "null"
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "items",
+                        "nextCursor",
+                        "hasNext"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "description": "Array of paginated result records.",
+                          "example": []
+                        },
+                        "nextCursor": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Opaque cursor for the next page of results. Pass this value as `cursor` in the next request to retrieve earlier records. Null when `hasNext` is false. Encoded as a base64 string whose internal structure should not be relied upon.\n",
+                          "example": "YWJjMTIz"
+                        },
+                        "hasNext": {
+                          "type": "boolean",
+                          "description": "Whether more records are available beyond this page.",
+                          "example": true
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "description": "A perpetual order record.",
+                            "required": [
+                              "orderId",
+                              "symbol",
+                              "subaccount",
+                              "side",
+                              "type",
+                              "status",
+                              "time",
+                              "updatedTime",
+                              "price",
+                              "qty",
+                              "filledQty",
+                              "filledQuoteQty",
+                              "avgFilledPrice",
+                              "takeProfit",
+                              "stopLoss",
+                              "reduceOnly",
+                              "postOnly",
+                              "fee",
+                              "feeAsset",
+                              "blockNumber",
+                              "txHash"
+                            ],
+                            "properties": {
+                              "orderId": {
+                                "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
+                                "type": "string",
+                                "example": "123456789"
+                              },
+                              "symbol": {
+                                "type": "string",
+                                "description": "A perpetual market symbol.",
+                                "enum": [
+                                  "BTC-USDC",
+                                  "ETH-USDC",
+                                  "SOL-USDC"
+                                ],
+                                "example": "BTC-USDC"
+                              },
+                              "subaccount": {
+                                "description": "Subaccount address that placed the order.",
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]{40}$",
+                                "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
+                              },
+                              "side": {
+                                "type": "string",
+                                "description": "The side of an order.",
+                                "enum": [
+                                  "BUY",
+                                  "SELL"
+                                ],
+                                "example": "BUY"
+                              },
+                              "type": {
+                                "type": "string",
+                                "description": "Basic order type.",
+                                "enum": [
+                                  "LIMIT",
+                                  "MARKET"
+                                ],
+                                "example": "LIMIT"
+                              },
+                              "status": {
+                                "type": "string",
+                                "description": "The current status of an order.\n\n| Value | Description |\n|---|---|\n| `OPEN` | Active on the orderbook. |\n| `PARTIALLY_FILLED` | Partially executed; remainder still active. |\n| `FILLED` | Fully executed. |\n| `CANCELED` | Canceled by user or protocol. |\n| `REJECTED` | Reverted or failed on-chain. |\n| `EXPIRED` | The order was canceled according to the order type's rules or by the exchange. |\n",
+                                "enum": [
+                                  "OPEN",
+                                  "PARTIALLY_FILLED",
+                                  "FILLED",
+                                  "CANCELED",
+                                  "REJECTED",
+                                  "EXPIRED"
+                                ],
+                                "example": "FILLED"
+                              },
+                              "time": {
+                                "description": "Order creation timestamp in milliseconds.",
+                                "type": "integer",
+                                "format": "int64",
+                                "minimum": 1000000000000,
+                                "maximum": 4102444800000,
+                                "example": 1678886400000
+                              },
+                              "updatedTime": {
+                                "description": "Timestamp of the last state change (fill, cancel, etc.).",
+                                "type": "integer",
+                                "format": "int64",
+                                "minimum": 1000000000000,
+                                "maximum": 4102444800000,
+                                "example": 1678886400000
+                              },
+                              "price": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "decimal",
+                                "description": "Limit price. `null` for MARKET orders.",
+                                "example": "2019.63"
+                              },
+                              "qty": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "Order quantity in base asset.",
+                                "example": "0.01"
+                              },
+                              "filledQty": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "Filled quantity in base asset.",
+                                "example": "0.01"
+                              },
+                              "filledQuoteQty": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "decimal",
+                                "description": "Filled quote asset quantity. `null` when historical fill aggregation is unavailable.",
+                                "example": "20.1963"
+                              },
+                              "avgFilledPrice": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "decimal",
+                                "description": "Average filled price across all fills of this order. `null` if no fills yet.",
+                                "example": "2019.63"
+                              },
+                              "takeProfit": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "decimal",
+                                "description": "Take-profit price if set.",
+                                "example": "2200.00"
+                              },
+                              "stopLoss": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "decimal",
+                                "description": "Stop-loss price if set.",
+                                "example": "1800.00"
+                              },
+                              "reduceOnly": {
+                                "type": "boolean",
+                                "description": "Whether the order is reduce-only.",
+                                "example": false
+                              },
+                              "postOnly": {
+                                "type": "boolean",
+                                "description": "Whether the order is post-only (maker-only).",
+                                "example": false
+                              },
+                              "fee": {
+                                "type": "string",
+                                "format": "decimal",
+                                "description": "Total fee charged for this order.",
+                                "example": "0.002022"
+                              },
+                              "feeAsset": {
+                                "type": "string",
+                                "description": "Asset in which the fee is charged.",
+                                "example": "USDC"
+                              },
+                              "blockNumber": {
+                                "type": "integer",
+                                "format": "int64",
+                                "description": "Block number at which the order was submitted on-chain.",
+                                "example": 8996440
+                              },
+                              "txHash": {
+                                "oneOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^0x[a-fA-F0-9]{64}$",
+                                    "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                                    "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
+                              },
+                              "cancelReason": {
+                                "type": "string",
+                                "description": "Reason why the order was canceled, if applicable.",
+                                "example": "None"
+                              },
+                              "cancelBlockNumber": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "format": "int64",
+                                "description": "Block number at which the order was canceled, if applicable.",
+                                "example": 8996500
+                              }
+                            }
                           }
-                        ],
-                        "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
-                      },
-                      "cancelReason": {
-                        "type": "string",
-                        "description": "Reason why the order was canceled, if applicable.",
-                        "example": "None"
-                      },
-                      "cancelBlockNumber": {
-                        "type": [
-                          "integer",
-                          "null"
-                        ],
-                        "format": "int64",
-                        "description": "Block number at which the order was canceled, if applicable.",
-                        "example": 8996500
+                        }
                       }
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -3181,6 +3903,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -3242,7 +4007,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -3289,6 +4054,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -3559,6 +4325,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -3846,6 +4655,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -3884,7 +4736,8 @@
               "enum": [
                 "BTC-USDC",
                 "ETH-USDC",
-                "SOL-USDC"
+                "SOL-USDC",
+                "DPX-USDC"
               ],
               "example": "BTC-USDC"
             }
@@ -3908,7 +4761,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -3969,6 +4822,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -4023,7 +4877,7 @@
                             ],
                             "properties": {
                               "orderId": {
-                                "description": "On-chain order ID. Scoped to (symbol, side) by the validator.",
+                                "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
                                 "type": "string",
                                 "example": "123456789"
                               },
@@ -4033,7 +4887,8 @@
                                 "enum": [
                                   "BTC-USDC",
                                   "ETH-USDC",
-                                  "SOL-USDC"
+                                  "SOL-USDC",
+                                  "DPX-USDC"
                                 ],
                                 "example": "BTC-USDC"
                               },
@@ -4160,14 +5015,14 @@
                                   {
                                     "type": "string",
                                     "pattern": "^0x[a-fA-F0-9]{64}$",
-                                    "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                                    "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+                                    "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                                    "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
                                   },
                                   {
                                     "type": "null"
                                   }
                                 ],
-                                "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
+                                "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
                               }
                             }
                           }
@@ -4308,6 +5163,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -4346,7 +5244,8 @@
               "enum": [
                 "BTC-USDC",
                 "ETH-USDC",
-                "SOL-USDC"
+                "SOL-USDC",
+                "DPX-USDC"
               ],
               "example": "BTC-USDC"
             }
@@ -4385,7 +5284,7 @@
                     ],
                     "properties": {
                       "orderId": {
-                        "description": "On-chain order ID. Scoped to (symbol, side) by the validator.",
+                        "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
                         "type": "string",
                         "example": "123456789"
                       },
@@ -4395,7 +5294,8 @@
                         "enum": [
                           "BTC-USDC",
                           "ETH-USDC",
-                          "SOL-USDC"
+                          "SOL-USDC",
+                          "DPX-USDC"
                         ],
                         "example": "BTC-USDC"
                       },
@@ -4522,14 +5422,14 @@
                           {
                             "type": "string",
                             "pattern": "^0x[a-fA-F0-9]{64}$",
-                            "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                            "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+                            "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                            "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
                           },
                           {
                             "type": "null"
                           }
                         ],
-                        "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
+                        "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
                       }
                     }
                   }
@@ -4666,6 +5566,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -4704,7 +5647,8 @@
               "enum": [
                 "BTC-USDC",
                 "ETH-USDC",
-                "SOL-USDC"
+                "SOL-USDC",
+                "DPX-USDC"
               ],
               "example": "BTC-USDC"
             }
@@ -4713,7 +5657,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -4774,6 +5718,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -4831,7 +5776,8 @@
                                 "enum": [
                                   "BTC-USDC",
                                   "ETH-USDC",
-                                  "SOL-USDC"
+                                  "SOL-USDC",
+                                  "DPX-USDC"
                                 ],
                                 "example": "BTC-USDC"
                               },
@@ -5040,6 +5986,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -5235,6 +6224,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -5309,7 +6341,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -5353,6 +6385,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -5830,6 +6863,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -5874,7 +6950,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -5961,6 +7037,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -6601,6 +7678,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -6610,235 +7730,238 @@
         "tags": [
           "Account"
         ],
-        "summary": "Get Perpetual Order by Transaction Hash",
+        "summary": "List Perpetual Orders by Transaction Hash",
         "security": [],
-        "description": "Retrieves a specific perpetual order record using its on-chain transaction hash.\n",
-        "operationId": "getPerpOrderByTx",
+        "description": "Retrieves all perpetual order records created by an on-chain transaction. A batch transaction may create multiple orders.\n",
+        "operationId": "listPerpOrdersByTx",
         "parameters": [
           {
             "name": "txHash",
             "in": "path",
             "required": true,
-            "description": "The on-chain transaction hash of the order.",
+            "description": "The on-chain transaction hash that created the orders. Supports native extrinsic and EVM transaction hashes.",
             "schema": {
               "type": "string",
               "pattern": "^0x[a-fA-F0-9]{64}$",
-              "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-              "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+              "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+              "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "The requested perpetual order record.",
+            "description": "The perpetual order records created by the transaction.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "description": "A perpetual order record.",
-                  "required": [
-                    "orderId",
-                    "symbol",
-                    "subaccount",
-                    "side",
-                    "type",
-                    "status",
-                    "time",
-                    "updatedTime",
-                    "price",
-                    "qty",
-                    "filledQty",
-                    "filledQuoteQty",
-                    "avgFilledPrice",
-                    "takeProfit",
-                    "stopLoss",
-                    "reduceOnly",
-                    "postOnly",
-                    "fee",
-                    "feeAsset",
-                    "blockNumber",
-                    "txHash"
-                  ],
-                  "properties": {
-                    "orderId": {
-                      "description": "On-chain order ID.",
-                      "type": "string",
-                      "example": "123456789"
-                    },
-                    "symbol": {
-                      "type": "string",
-                      "description": "A perpetual market symbol.",
-                      "enum": [
-                        "BTC-USDC",
-                        "ETH-USDC",
-                        "SOL-USDC"
-                      ],
-                      "example": "BTC-USDC"
-                    },
-                    "subaccount": {
-                      "description": "Subaccount address that placed the order.",
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
-                    },
-                    "side": {
-                      "type": "string",
-                      "description": "The side of an order.",
-                      "enum": [
-                        "BUY",
-                        "SELL"
-                      ],
-                      "example": "BUY"
-                    },
-                    "type": {
-                      "type": "string",
-                      "description": "Basic order type.",
-                      "enum": [
-                        "LIMIT",
-                        "MARKET"
-                      ],
-                      "example": "LIMIT"
-                    },
-                    "status": {
-                      "type": "string",
-                      "description": "The current status of an order.\n\n| Value | Description |\n|---|---|\n| `OPEN` | Active on the orderbook. |\n| `PARTIALLY_FILLED` | Partially executed; remainder still active. |\n| `FILLED` | Fully executed. |\n| `CANCELED` | Canceled by user or protocol. |\n| `REJECTED` | Reverted or failed on-chain. |\n| `EXPIRED` | The order was canceled according to the order type's rules or by the exchange. |\n",
-                      "enum": [
-                        "OPEN",
-                        "PARTIALLY_FILLED",
-                        "FILLED",
-                        "CANCELED",
-                        "REJECTED",
-                        "EXPIRED"
-                      ],
-                      "example": "FILLED"
-                    },
-                    "time": {
-                      "description": "Order creation timestamp in milliseconds.",
-                      "type": "integer",
-                      "format": "int64",
-                      "minimum": 1000000000000,
-                      "maximum": 4102444800000,
-                      "example": 1678886400000
-                    },
-                    "updatedTime": {
-                      "description": "Timestamp of the last state change (fill, cancel, etc.).",
-                      "type": "integer",
-                      "format": "int64",
-                      "minimum": 1000000000000,
-                      "maximum": 4102444800000,
-                      "example": 1678886400000
-                    },
-                    "price": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "format": "decimal",
-                      "description": "Limit price. `null` for MARKET orders.",
-                      "example": "2019.63"
-                    },
-                    "qty": {
-                      "type": "string",
-                      "format": "decimal",
-                      "description": "Order quantity in base asset.",
-                      "example": "0.01"
-                    },
-                    "filledQty": {
-                      "type": "string",
-                      "format": "decimal",
-                      "description": "Filled quantity in base asset.",
-                      "example": "0.01"
-                    },
-                    "filledQuoteQty": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "format": "decimal",
-                      "description": "Filled quote asset quantity. `null` when historical fill aggregation is unavailable.",
-                      "example": "20.1963"
-                    },
-                    "avgFilledPrice": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "format": "decimal",
-                      "description": "Average filled price across all fills of this order. `null` if no fills yet.",
-                      "example": "2019.63"
-                    },
-                    "takeProfit": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "format": "decimal",
-                      "description": "Take-profit price if set.",
-                      "example": "2200.00"
-                    },
-                    "stopLoss": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "format": "decimal",
-                      "description": "Stop-loss price if set.",
-                      "example": "1800.00"
-                    },
-                    "reduceOnly": {
-                      "type": "boolean",
-                      "description": "Whether the order is reduce-only.",
-                      "example": false
-                    },
-                    "postOnly": {
-                      "type": "boolean",
-                      "description": "Whether the order is post-only (maker-only).",
-                      "example": false
-                    },
-                    "fee": {
-                      "type": "string",
-                      "format": "decimal",
-                      "description": "Total fee charged for this order.",
-                      "example": "0.002022"
-                    },
-                    "feeAsset": {
-                      "type": "string",
-                      "description": "Asset in which the fee is charged.",
-                      "example": "USDC"
-                    },
-                    "blockNumber": {
-                      "type": "integer",
-                      "format": "int64",
-                      "description": "Block number at which the order was submitted on-chain.",
-                      "example": 8996440
-                    },
-                    "txHash": {
-                      "oneOf": [
-                        {
-                          "type": "string",
-                          "pattern": "^0x[a-fA-F0-9]{64}$",
-                          "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                          "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ],
-                      "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
-                    },
-                    "cancelReason": {
-                      "type": "string",
-                      "description": "Reason why the order was canceled, if applicable.",
-                      "example": "None"
-                    },
-                    "cancelBlockNumber": {
-                      "type": [
-                        "integer",
-                        "null"
-                      ],
-                      "format": "int64",
-                      "description": "Block number at which the order was canceled, if applicable.",
-                      "example": 8996500
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "description": "A perpetual order record.",
+                    "required": [
+                      "orderId",
+                      "symbol",
+                      "subaccount",
+                      "side",
+                      "type",
+                      "status",
+                      "time",
+                      "updatedTime",
+                      "price",
+                      "qty",
+                      "filledQty",
+                      "filledQuoteQty",
+                      "avgFilledPrice",
+                      "takeProfit",
+                      "stopLoss",
+                      "reduceOnly",
+                      "postOnly",
+                      "fee",
+                      "feeAsset",
+                      "blockNumber",
+                      "txHash"
+                    ],
+                    "properties": {
+                      "orderId": {
+                        "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
+                        "type": "string",
+                        "example": "123456789"
+                      },
+                      "symbol": {
+                        "type": "string",
+                        "description": "A perpetual market symbol.",
+                        "enum": [
+                          "BTC-USDC",
+                          "ETH-USDC",
+                          "SOL-USDC"
+                        ],
+                        "example": "BTC-USDC"
+                      },
+                      "subaccount": {
+                        "description": "Subaccount address that placed the order.",
+                        "type": "string",
+                        "pattern": "^0x[a-fA-F0-9]{40}$",
+                        "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
+                      },
+                      "side": {
+                        "type": "string",
+                        "description": "The side of an order.",
+                        "enum": [
+                          "BUY",
+                          "SELL"
+                        ],
+                        "example": "BUY"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Basic order type.",
+                        "enum": [
+                          "LIMIT",
+                          "MARKET"
+                        ],
+                        "example": "LIMIT"
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "The current status of an order.\n\n| Value | Description |\n|---|---|\n| `OPEN` | Active on the orderbook. |\n| `PARTIALLY_FILLED` | Partially executed; remainder still active. |\n| `FILLED` | Fully executed. |\n| `CANCELED` | Canceled by user or protocol. |\n| `REJECTED` | Reverted or failed on-chain. |\n| `EXPIRED` | The order was canceled according to the order type's rules or by the exchange. |\n",
+                        "enum": [
+                          "OPEN",
+                          "PARTIALLY_FILLED",
+                          "FILLED",
+                          "CANCELED",
+                          "REJECTED",
+                          "EXPIRED"
+                        ],
+                        "example": "FILLED"
+                      },
+                      "time": {
+                        "description": "Order creation timestamp in milliseconds.",
+                        "type": "integer",
+                        "format": "int64",
+                        "minimum": 1000000000000,
+                        "maximum": 4102444800000,
+                        "example": 1678886400000
+                      },
+                      "updatedTime": {
+                        "description": "Timestamp of the last state change (fill, cancel, etc.).",
+                        "type": "integer",
+                        "format": "int64",
+                        "minimum": 1000000000000,
+                        "maximum": 4102444800000,
+                        "example": 1678886400000
+                      },
+                      "price": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "decimal",
+                        "description": "Limit price. `null` for MARKET orders.",
+                        "example": "2019.63"
+                      },
+                      "qty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Order quantity in base asset.",
+                        "example": "0.01"
+                      },
+                      "filledQty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Filled quantity in base asset.",
+                        "example": "0.01"
+                      },
+                      "filledQuoteQty": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "decimal",
+                        "description": "Filled quote asset quantity. `null` when historical fill aggregation is unavailable.",
+                        "example": "20.1963"
+                      },
+                      "avgFilledPrice": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "decimal",
+                        "description": "Average filled price across all fills of this order. `null` if no fills yet.",
+                        "example": "2019.63"
+                      },
+                      "takeProfit": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "decimal",
+                        "description": "Take-profit price if set.",
+                        "example": "2200.00"
+                      },
+                      "stopLoss": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "decimal",
+                        "description": "Stop-loss price if set.",
+                        "example": "1800.00"
+                      },
+                      "reduceOnly": {
+                        "type": "boolean",
+                        "description": "Whether the order is reduce-only.",
+                        "example": false
+                      },
+                      "postOnly": {
+                        "type": "boolean",
+                        "description": "Whether the order is post-only (maker-only).",
+                        "example": false
+                      },
+                      "fee": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Total fee charged for this order.",
+                        "example": "0.002022"
+                      },
+                      "feeAsset": {
+                        "type": "string",
+                        "description": "Asset in which the fee is charged.",
+                        "example": "USDC"
+                      },
+                      "blockNumber": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Block number at which the order was submitted on-chain.",
+                        "example": 8996440
+                      },
+                      "txHash": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^0x[a-fA-F0-9]{64}$",
+                            "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                            "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
+                      },
+                      "cancelReason": {
+                        "type": "string",
+                        "description": "Reason why the order was canceled, if applicable.",
+                        "example": "None"
+                      },
+                      "cancelBlockNumber": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "format": "int64",
+                        "description": "Block number at which the order was canceled, if applicable.",
+                        "example": 8996500
+                      }
                     }
                   }
                 }
@@ -6971,6 +8094,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -6983,200 +8149,204 @@
         "tags": [
           "Account"
         ],
-        "summary": "Get Spot Order by Transaction Hash",
+        "summary": "List Spot Orders by Transaction Hash",
         "security": [],
-        "description": "Retrieves a specific spot order record using its on-chain transaction hash.\n",
-        "operationId": "getSpotOrderByTx",
+        "description": "Retrieves all spot order records created by an on-chain transaction. A batch transaction may create multiple orders.\n",
+        "operationId": "listSpotOrdersByTx",
         "parameters": [
           {
             "name": "txHash",
             "in": "path",
             "required": true,
-            "description": "The on-chain transaction hash of the order.",
+            "description": "The on-chain transaction hash that created the orders. Supports native extrinsic and EVM transaction hashes.",
             "schema": {
               "type": "string",
               "pattern": "^0x[a-fA-F0-9]{64}$",
-              "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-              "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+              "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+              "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "The requested spot order record.",
+            "description": "The spot order records created by the transaction.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "description": "A spot order record.",
-                  "required": [
-                    "orderId",
-                    "symbol",
-                    "time",
-                    "subaccount",
-                    "side",
-                    "type",
-                    "status",
-                    "price",
-                    "qty",
-                    "filledQty",
-                    "quoteQty",
-                    "filledQuoteQty",
-                    "fee",
-                    "feeAsset",
-                    "postOnly",
-                    "reduceOnly",
-                    "frozen",
-                    "blockNumber",
-                    "txHash"
-                  ],
-                  "properties": {
-                    "orderId": {
-                      "description": "On-chain order ID. Scoped to (symbol, side) by the validator.",
-                      "type": "string",
-                      "example": "123456789"
-                    },
-                    "symbol": {
-                      "type": "string",
-                      "description": "A spot market symbol.",
-                      "enum": [
-                        "BTC-USDC",
-                        "ETH-USDC",
-                        "SOL-USDC"
-                      ],
-                      "example": "BTC-USDC"
-                    },
-                    "time": {
-                      "description": "Order creation timestamp in milliseconds.",
-                      "type": "integer",
-                      "format": "int64",
-                      "minimum": 1000000000000,
-                      "maximum": 4102444800000,
-                      "example": 1678886400000
-                    },
-                    "updatedTime": {
-                      "description": "Timestamp of the last state change (fill, cancel, etc.).",
-                      "type": "integer",
-                      "format": "int64",
-                      "minimum": 1000000000000,
-                      "maximum": 4102444800000,
-                      "example": 1678886400000
-                    },
-                    "subaccount": {
-                      "description": "Subaccount address that placed the order.",
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
-                    },
-                    "side": {
-                      "type": "string",
-                      "description": "The side of an order.",
-                      "enum": [
-                        "BUY",
-                        "SELL"
-                      ],
-                      "example": "BUY"
-                    },
-                    "type": {
-                      "type": "string",
-                      "description": "Basic order type.",
-                      "enum": [
-                        "LIMIT",
-                        "MARKET"
-                      ],
-                      "example": "LIMIT"
-                    },
-                    "status": {
-                      "type": "string",
-                      "description": "The current status of an order.\n\n| Value | Description |\n|---|---|\n| `OPEN` | Active on the orderbook. |\n| `PARTIALLY_FILLED` | Partially executed; remainder still active. |\n| `FILLED` | Fully executed. |\n| `CANCELED` | Canceled by user or protocol. |\n| `REJECTED` | Reverted or failed on-chain. |\n| `EXPIRED` | The order was canceled according to the order type's rules or by the exchange. |\n",
-                      "enum": [
-                        "OPEN",
-                        "PARTIALLY_FILLED",
-                        "FILLED",
-                        "CANCELED",
-                        "REJECTED",
-                        "EXPIRED"
-                      ],
-                      "example": "FILLED"
-                    },
-                    "price": {
-                      "type": [
-                        "string",
-                        "null"
-                      ],
-                      "format": "decimal",
-                      "description": "Limit price. `null` for MARKET orders.",
-                      "example": "1989.77"
-                    },
-                    "qty": {
-                      "type": "string",
-                      "format": "decimal",
-                      "description": "Base asset quantity ordered.",
-                      "example": "0.01"
-                    },
-                    "filledQty": {
-                      "type": "string",
-                      "format": "decimal",
-                      "description": "Filled base asset quantity.",
-                      "example": "0.01"
-                    },
-                    "quoteQty": {
-                      "type": "string",
-                      "format": "decimal",
-                      "description": "Quote asset quantity.",
-                      "example": "19.8977"
-                    },
-                    "filledQuoteQty": {
-                      "type": "string",
-                      "format": "decimal",
-                      "description": "Filled quote asset quantity.",
-                      "example": "0.00"
-                    },
-                    "fee": {
-                      "type": "string",
-                      "format": "decimal",
-                      "description": "Total fee charged.",
-                      "example": "0.001989"
-                    },
-                    "feeAsset": {
-                      "type": "string",
-                      "description": "Asset in which the fee is charged. Determined by the received asset (base for BUY, quote for SELL).",
-                      "example": "BTC"
-                    },
-                    "postOnly": {
-                      "type": "boolean",
-                      "description": "Whether the order is post-only (maker-only).",
-                      "example": false
-                    },
-                    "reduceOnly": {
-                      "type": "boolean",
-                      "description": "Whether the order can only reduce an open position.",
-                      "example": false
-                    },
-                    "frozen": {
-                      "type": "boolean",
-                      "description": "Whether the order is frozen by the protocol.",
-                      "example": false
-                    },
-                    "blockNumber": {
-                      "type": "integer",
-                      "format": "int64",
-                      "description": "Block number at which the order was submitted on-chain.",
-                      "example": 8689320
-                    },
-                    "txHash": {
-                      "oneOf": [
-                        {
-                          "type": "string",
-                          "pattern": "^0x[a-fA-F0-9]{64}$",
-                          "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                          "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ],
-                      "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "description": "A spot order record.",
+                    "required": [
+                      "orderId",
+                      "symbol",
+                      "time",
+                      "subaccount",
+                      "side",
+                      "type",
+                      "status",
+                      "price",
+                      "qty",
+                      "filledQty",
+                      "quoteQty",
+                      "filledQuoteQty",
+                      "fee",
+                      "feeAsset",
+                      "postOnly",
+                      "reduceOnly",
+                      "frozen",
+                      "blockNumber",
+                      "txHash"
+                    ],
+                    "properties": {
+                      "orderId": {
+                        "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
+                        "type": "string",
+                        "example": "123456789"
+                      },
+                      "symbol": {
+                        "type": "string",
+                        "description": "A spot market symbol.",
+                        "enum": [
+                          "BTC-USDC",
+                          "ETH-USDC",
+                          "SOL-USDC",
+                          "DPX-USDC"
+                        ],
+                        "example": "BTC-USDC"
+                      },
+                      "time": {
+                        "description": "Order creation timestamp in milliseconds.",
+                        "type": "integer",
+                        "format": "int64",
+                        "minimum": 1000000000000,
+                        "maximum": 4102444800000,
+                        "example": 1678886400000
+                      },
+                      "updatedTime": {
+                        "description": "Timestamp of the last state change (fill, cancel, etc.).",
+                        "type": "integer",
+                        "format": "int64",
+                        "minimum": 1000000000000,
+                        "maximum": 4102444800000,
+                        "example": 1678886400000
+                      },
+                      "subaccount": {
+                        "description": "Subaccount address that placed the order.",
+                        "type": "string",
+                        "pattern": "^0x[a-fA-F0-9]{40}$",
+                        "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
+                      },
+                      "side": {
+                        "type": "string",
+                        "description": "The side of an order.",
+                        "enum": [
+                          "BUY",
+                          "SELL"
+                        ],
+                        "example": "BUY"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Basic order type.",
+                        "enum": [
+                          "LIMIT",
+                          "MARKET"
+                        ],
+                        "example": "LIMIT"
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "The current status of an order.\n\n| Value | Description |\n|---|---|\n| `OPEN` | Active on the orderbook. |\n| `PARTIALLY_FILLED` | Partially executed; remainder still active. |\n| `FILLED` | Fully executed. |\n| `CANCELED` | Canceled by user or protocol. |\n| `REJECTED` | Reverted or failed on-chain. |\n| `EXPIRED` | The order was canceled according to the order type's rules or by the exchange. |\n",
+                        "enum": [
+                          "OPEN",
+                          "PARTIALLY_FILLED",
+                          "FILLED",
+                          "CANCELED",
+                          "REJECTED",
+                          "EXPIRED"
+                        ],
+                        "example": "FILLED"
+                      },
+                      "price": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "decimal",
+                        "description": "Limit price. `null` for MARKET orders.",
+                        "example": "1989.77"
+                      },
+                      "qty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Base asset quantity ordered.",
+                        "example": "0.01"
+                      },
+                      "filledQty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Filled base asset quantity.",
+                        "example": "0.01"
+                      },
+                      "quoteQty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Quote asset quantity.",
+                        "example": "19.8977"
+                      },
+                      "filledQuoteQty": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Filled quote asset quantity.",
+                        "example": "0.00"
+                      },
+                      "fee": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "Total fee charged.",
+                        "example": "0.001989"
+                      },
+                      "feeAsset": {
+                        "type": "string",
+                        "description": "Asset in which the fee is charged. Determined by the received asset (base for BUY, quote for SELL).",
+                        "example": "BTC"
+                      },
+                      "postOnly": {
+                        "type": "boolean",
+                        "description": "Whether the order is post-only (maker-only).",
+                        "example": false
+                      },
+                      "reduceOnly": {
+                        "type": "boolean",
+                        "description": "Whether the order can only reduce an open position.",
+                        "example": false
+                      },
+                      "frozen": {
+                        "type": "boolean",
+                        "description": "Whether the order is frozen by the protocol.",
+                        "example": false
+                      },
+                      "blockNumber": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Block number at which the order was submitted on-chain.",
+                        "example": 8689320
+                      },
+                      "txHash": {
+                        "oneOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^0x[a-fA-F0-9]{64}$",
+                            "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                            "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
+                      }
                     }
                   }
                 }
@@ -7309,6 +8479,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -7323,7 +8536,7 @@
         ],
         "summary": "Get Perpetual Order by ID",
         "security": [],
-        "description": "Retrieves a specific perpetual order record by its V1 indexer-assigned order ID within a subaccount.\n",
+        "description": "Retrieves a specific perpetual order record by its on-chain order ID within a subaccount.\n",
         "operationId": "getPerpOrderById",
         "parameters": [
           {
@@ -7342,7 +8555,7 @@
             "name": "orderId",
             "in": "path",
             "required": true,
-            "description": "The V1 indexer-assigned order ID. Unique per subaccount.",
+            "description": "The on-chain order ID. Unique within the subaccount.",
             "schema": {
               "type": "string",
               "description": "A unique identifier. Always a string — compare by equality, do not parse as a number.",
@@ -7383,7 +8596,7 @@
                   ],
                   "properties": {
                     "orderId": {
-                      "description": "On-chain order ID.",
+                      "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
                       "type": "string",
                       "example": "123456789"
                     },
@@ -7539,14 +8752,14 @@
                         {
                           "type": "string",
                           "pattern": "^0x[a-fA-F0-9]{64}$",
-                          "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                          "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+                          "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                          "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
                         },
                         {
                           "type": "null"
                         }
                       ],
-                      "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
+                      "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
                     },
                     "cancelReason": {
                       "type": "string",
@@ -7696,6 +8909,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -7707,7 +8963,7 @@
         ],
         "summary": "Get Spot Order by ID",
         "security": [],
-        "description": "Retrieves a specific spot order record by its V1 indexer-assigned order ID within a subaccount.\n",
+        "description": "Retrieves a specific spot order record by its on-chain order ID within a subaccount.\n",
         "operationId": "getSpotOrderById",
         "parameters": [
           {
@@ -7726,7 +8982,7 @@
             "name": "orderId",
             "in": "path",
             "required": true,
-            "description": "The V1 indexer-assigned order ID. Unique per subaccount.",
+            "description": "The on-chain order ID. Unique within the subaccount.",
             "schema": {
               "type": "string",
               "description": "A unique identifier. Always a string — compare by equality, do not parse as a number.",
@@ -7765,7 +9021,7 @@
                   ],
                   "properties": {
                     "orderId": {
-                      "description": "On-chain order ID. Scoped to (symbol, side) by the validator.",
+                      "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
                       "type": "string",
                       "example": "123456789"
                     },
@@ -7775,7 +9031,8 @@
                       "enum": [
                         "BTC-USDC",
                         "ETH-USDC",
-                        "SOL-USDC"
+                        "SOL-USDC",
+                        "DPX-USDC"
                       ],
                       "example": "BTC-USDC"
                     },
@@ -7902,14 +9159,14 @@
                         {
                           "type": "string",
                           "pattern": "^0x[a-fA-F0-9]{64}$",
-                          "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                          "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+                          "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                          "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
                         },
                         {
                           "type": "null"
                         }
                       ],
-                      "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
+                      "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
                     }
                   }
                 }
@@ -8042,6 +9299,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -8074,7 +9374,8 @@
                 "enum": [
                   "BTC-USDC",
                   "ETH-USDC",
-                  "SOL-USDC"
+                  "SOL-USDC",
+                  "DPX-USDC"
                 ],
                 "example": "BTC-USDC"
               },
@@ -8120,7 +9421,8 @@
                         "enum": [
                           "BTC-USDC",
                           "ETH-USDC",
-                          "SOL-USDC"
+                          "SOL-USDC",
+                          "DPX-USDC"
                         ],
                         "example": "BTC-USDC"
                       },
@@ -8319,6 +9621,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -8345,7 +9690,8 @@
               "enum": [
                 "BTC-USDC",
                 "ETH-USDC",
-                "SOL-USDC"
+                "SOL-USDC",
+                "DPX-USDC"
               ],
               "example": "BTC-USDC"
             }
@@ -8384,7 +9730,8 @@
                       "enum": [
                         "BTC-USDC",
                         "ETH-USDC",
-                        "SOL-USDC"
+                        "SOL-USDC",
+                        "DPX-USDC"
                       ],
                       "example": "BTC-USDC"
                     },
@@ -8626,6 +9973,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -8652,7 +10042,8 @@
               "enum": [
                 "BTC-USDC",
                 "ETH-USDC",
-                "SOL-USDC"
+                "SOL-USDC",
+                "DPX-USDC"
               ],
               "example": "BTC-USDC"
             }
@@ -8958,6 +10349,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -8984,7 +10418,8 @@
               "enum": [
                 "BTC-USDC",
                 "ETH-USDC",
-                "SOL-USDC"
+                "SOL-USDC",
+                "DPX-USDC"
               ],
               "example": "BTC-USDC"
             }
@@ -9007,7 +10442,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -9024,6 +10459,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -9080,7 +10516,8 @@
                                 "enum": [
                                   "BTC-USDC",
                                   "ETH-USDC",
-                                  "SOL-USDC"
+                                  "SOL-USDC",
+                                  "DPX-USDC"
                                 ],
                                 "example": "BTC-USDC"
                               },
@@ -9280,6 +10717,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -9306,7 +10786,8 @@
               "enum": [
                 "BTC-USDC",
                 "ETH-USDC",
-                "SOL-USDC"
+                "SOL-USDC",
+                "DPX-USDC"
               ],
               "example": "BTC-USDC"
             }
@@ -9564,6 +11045,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -9903,6 +11427,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -10305,6 +11872,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -10411,12 +12021,13 @@
             "name": "priceType",
             "in": "query",
             "required": false,
-            "description": "The type of price. `trade` = trade price that occurred in the market, `index` = index price. Defaults to `trade`.",
+            "description": "The type of price. `trade` = trade price that occurred in the market, `index` = index price, `mark` = mark price. Defaults to `trade`.",
             "schema": {
               "type": "string",
               "enum": [
                 "trade",
-                "index"
+                "index",
+                "mark"
               ],
               "default": "trade"
             }
@@ -10637,6 +12248,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -10686,7 +12340,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
-            "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+            "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
             "schema": {
               "type": "string"
             }
@@ -10703,6 +12357,7 @@
                       "type": "object",
                       "required": [
                         "items",
+                        "nextCursor",
                         "hasNext"
                       ],
                       "properties": {
@@ -10963,6 +12618,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -11253,6 +12951,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -11461,6 +13202,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -11750,6 +13534,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -11957,6 +13784,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -12225,6 +14095,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -12426,6 +14339,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -12708,6 +14664,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -12947,6 +14946,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -13251,6 +15293,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -13423,6 +15508,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -13656,6 +15784,49 @@
                 "example": {
                   "code": 10010,
                   "msg": "Rate limit exceeded. Retry after 5 seconds."
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
                 }
               }
             }
@@ -13967,6 +16138,49 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                      "example": 10001
+                    },
+                    "msg": {
+                      "type": "string",
+                      "description": "A human-readable error message explaining the failure.",
+                      "example": "Market symbol does not exist."
+                    },
+                    "param": {
+                      "type": "string",
+                      "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                      "example": "symbol"
+                    }
+                  }
+                },
+                "example": {
+                  "code": 10012,
+                  "msg": "Service temporarily unavailable. Please try again later."
+                }
+              }
+            }
           }
         }
       }
@@ -14032,7 +16246,8 @@
         "enum": [
           "BTC-USDC",
           "ETH-USDC",
-          "SOL-USDC"
+          "SOL-USDC",
+          "DPX-USDC"
         ],
         "example": "BTC-USDC"
       },
@@ -14327,7 +16542,8 @@
                 "enum": [
                   "BTC-USDC",
                   "ETH-USDC",
-                  "SOL-USDC"
+                  "SOL-USDC",
+                  "DPX-USDC"
                 ],
                 "example": "BTC-USDC"
               },
@@ -14886,7 +17102,7 @@
           "equity": {
             "type": "string",
             "format": "decimal",
-            "description": "Net account value in USD. Calculated as total deposits minus total borrows minus accrued borrow interest, plus unrealized PnL across all open positions and unsettled funding payments.\n",
+            "description": "Net account value in USD. Calculated as total deposits minus total borrows, plus unrealized PnL across all open positions and unsettled funding payments.\n",
             "example": "799.80"
           },
           "totalDepositsUsd": {
@@ -15965,6 +18181,70 @@
         "type": "object",
         "description": "Empty response body"
       },
+      "DelegateInfo": {
+        "type": "object",
+        "description": "A delegate account configured for a wallet owner.",
+        "required": [
+          "delegateAddress",
+          "delegateName",
+          "validUntil",
+          "mode",
+          "createTime"
+        ],
+        "x-on-chain": {
+          "struct": "DelegateInfo",
+          "registry": "pallets/primitives/src/types.rs",
+          "storage": "pallet_subaccount::DelegateAccountsFor",
+          "mappings": {
+            "delegateAddress": "delegate_address",
+            "delegateName": "delegate_name",
+            "validUntil": "valid_until",
+            "mode": "mode (pallet_primitives::types::DelegateMode, only PlaceOrCancelOrder/Disable are assignable)",
+            "createTime": "create_time",
+            "active": "derived from DelegateInfo::is_active(now_ms) (`valid_until == 0 || valid_until > now_ms`)"
+          }
+        },
+        "properties": {
+          "delegateAddress": {
+            "description": "The delegate wallet address.",
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "example": "0x980dda997141caa099752905d32f4a3fb980a4e3"
+          },
+          "delegateName": {
+            "type": "string",
+            "description": "Human-readable label assigned by the wallet owner to this delegate account.",
+            "example": "risk-bot"
+          },
+          "validUntil": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "description": "Unix timestamp in milliseconds when the delegate permission expires. `0` means the delegate never expires.\n",
+            "example": 1781964821000
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "PlaceOrCancelOrder",
+              "Disable"
+            ],
+            "description": "Delegate permission mode. `PlaceOrCancelOrder` grants order placement and cancellation and is the default. `Disable` suspends the delegate without removing it.\n",
+            "example": "PlaceOrCancelOrder"
+          },
+          "createTime": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp in milliseconds when the delegate was first configured.",
+            "example": 1781964821000
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the delegate is currently usable. A delegate is active until it expires; a never-expiring delegate is always active.\n",
+            "example": true
+          }
+        }
+      },
       "SubaccountInfo": {
         "type": "object",
         "description": "Profile information for a specific subaccount.",
@@ -16111,6 +18391,7 @@
         "type": "object",
         "required": [
           "items",
+          "nextCursor",
           "hasNext"
         ],
         "properties": {
@@ -16235,6 +18516,12 @@
           }
         }
       },
+      "OrderTxHash": {
+        "type": "string",
+        "pattern": "^0x[a-fA-F0-9]{64}$",
+        "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+        "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
+      },
       "PerpOrder": {
         "type": "object",
         "description": "A perpetual order record.",
@@ -16263,7 +18550,7 @@
         ],
         "properties": {
           "orderId": {
-            "description": "On-chain order ID.",
+            "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
             "type": "string",
             "example": "123456789"
           },
@@ -16419,14 +18706,14 @@
               {
                 "type": "string",
                 "pattern": "^0x[a-fA-F0-9]{64}$",
-                "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+                "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
               },
               {
                 "type": "null"
               }
             ],
-            "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
+            "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
           },
           "cancelReason": {
             "type": "string",
@@ -16634,7 +18921,7 @@
         ],
         "properties": {
           "orderId": {
-            "description": "On-chain order ID. Scoped to (symbol, side) by the validator.",
+            "description": "On-chain order ID, unique within the subaccount. For direct placement or modify-order transactions, this is the order transaction nonce; other order paths use the subaccount's system order ID sequence.\n",
             "type": "string",
             "example": "123456789"
           },
@@ -16644,7 +18931,8 @@
             "enum": [
               "BTC-USDC",
               "ETH-USDC",
-              "SOL-USDC"
+              "SOL-USDC",
+              "DPX-USDC"
             ],
             "example": "BTC-USDC"
           },
@@ -16771,14 +19059,14 @@
               {
                 "type": "string",
                 "pattern": "^0x[a-fA-F0-9]{64}$",
-                "description": "An on-chain transaction hash in 0x-prefixed hex format (32 bytes).",
-                "example": "0xe9934d16d98c70b47e6f7b62aaf3adbeb5dec3e9d0b69660d6294819f526b47b"
+                "description": "The 32-byte creation transaction hash of an order, represented as either a native extrinsic hash or an EVM transaction hash.",
+                "example": "0x9b7ddd4fd0f97940005418084c0ed83f82605294bc16d2be34f9c8e2c03837e1"
               },
               {
                 "type": "null"
               }
             ],
-            "description": "On-chain transaction hash. `null` for historical records without a recoverable hash."
+            "description": "Creation transaction hash, which may be a native extrinsic or EVM transaction hash. `null` for historical records without a recoverable hash."
           }
         }
       },
@@ -16811,7 +19099,8 @@
             "enum": [
               "BTC-USDC",
               "ETH-USDC",
-              "SOL-USDC"
+              "SOL-USDC",
+              "DPX-USDC"
             ],
             "example": "BTC-USDC"
           },
@@ -17226,7 +19515,8 @@
             "enum": [
               "BTC-USDC",
               "ETH-USDC",
-              "SOL-USDC"
+              "SOL-USDC",
+              "DPX-USDC"
             ],
             "example": "BTC-USDC"
           },
@@ -17442,7 +19732,8 @@
             "enum": [
               "BTC-USDC",
               "ETH-USDC",
-              "SOL-USDC"
+              "SOL-USDC",
+              "DPX-USDC"
             ],
             "example": "BTC-USDC"
           },
@@ -18524,6 +20815,49 @@
           }
         }
       },
+      "ServiceUnavailable": {
+        "description": "Service Unavailable. The server is temporarily unable to handle the request (e.g., maintenance, chain node disconnected, indexer lagging).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "code",
+                "msg"
+              ],
+              "properties": {
+                "code": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "description": "API layer: 5-digit integer (10000–19999). On-chain: 'pallet_error' string (e.g. '19_0').",
+                  "example": 10001
+                },
+                "msg": {
+                  "type": "string",
+                  "description": "A human-readable error message explaining the failure.",
+                  "example": "Market symbol does not exist."
+                },
+                "param": {
+                  "type": "string",
+                  "description": "Optional. If the error was caused by a specific request parameter, its name is returned here.",
+                  "example": "symbol"
+                }
+              }
+            },
+            "example": {
+              "code": 10012,
+              "msg": "Service temporarily unavailable. Please try again later."
+            }
+          }
+        }
+      },
       "NotFound": {
         "description": "Not Found. The requested resource does not exist.",
         "content": {
@@ -18629,7 +20963,7 @@
         "name": "cursor",
         "in": "query",
         "required": false,
-        "description": "Cursor for pagination. Pass the `nextCursor` value from a previous response to fetch the next page of older records.",
+        "description": "Opaque cursor for pagination. Pass the `nextCursor` value from the previous response unchanged to fetch the next page of older records. Do not parse the cursor or rely on its internal structure.\n",
         "schema": {
           "type": "string"
         }
@@ -18676,7 +21010,8 @@
           "enum": [
             "BTC-USDC",
             "ETH-USDC",
-            "SOL-USDC"
+            "SOL-USDC",
+            "DPX-USDC"
           ],
           "example": "BTC-USDC"
         }
@@ -18693,7 +21028,8 @@
           "enum": [
             "BTC-USDC",
             "ETH-USDC",
-            "SOL-USDC"
+            "SOL-USDC",
+            "DPX-USDC"
           ],
           "example": "BTC-USDC"
         }

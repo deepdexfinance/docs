@@ -3,7 +3,8 @@
   "description": "Account data (wallets, subaccounts, orders, trades, positions).",
   "pages": [
     "getAccountSubaccounts",
-    "getOneClickTradingAccounts",
+    "getWalletDelegateAccounts",
+    "getDelegateDelegatorAccounts",
     "getWalletQuota",
     "createQuotaClaim",
     "getSubaccountInfo",
@@ -21,8 +22,8 @@
     "getSubaccountBalances",
     "listSubaccountBalanceEvents",
     "listSubaccountLiquidations",
-    "getPerpOrderByTx",
-    "getSpotOrderByTx",
+    "listPerpOrdersByTx",
+    "listSpotOrdersByTx",
     "getPerpOrderById",
     "getSpotOrderById"
   ]
